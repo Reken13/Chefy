@@ -1,0 +1,239 @@
+{% extends "base/base.html" %}
+{% block title %}Configuración inicial — Chefy{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-4" x-data="onboarding()">
+
+  <!-- Progress -->
+  <div class="mb-8">
+    <div class="flex items-center gap-2 mb-3">
+      <template x-for="(label, i) in steps" :key="i">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+               :class="i < step ? 'bg-green-500 text-white' : i === step ? 'text-white' : 'text-gray-400'"
+               :style="i === step ? 'background:var(--accent)' : i < step ? '' : 'background:var(--surface-2)'">
+            <template x-if="i < step"><i class="fas fa-check text-xs"></i></template>
+            <template x-if="i >= step"><span x-text="i + 1"></span></template>
+          </div>
+          <span class="text-xs font-medium hidden sm:block"
+                :style="i === step ? 'color:var(--accent)' : 'color:var(--text-muted)'"
+                x-text="label"></span>
+          <div x-show="i < steps.length - 1" class="w-8 h-px mx-1" style="background:var(--border)"></div>
+        </div>
+      </template>
+    </div>
+    <div class="w-full h-1 rounded-full overflow-hidden" style="background:var(--border)">
+      <div class="h-full rounded-full transition-all duration-500"
+           :style="`width:${(step / (steps.length - 1)) * 100}%; background:var(--accent)`"></div>
+    </div>
+  </div>
+
+  <form method="post" id="onboarding-form">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="complete">
+    <input type="hidden" name="restaurant_name" x-model="restaurantName">
+    <input type="hidden" name="template" x-model="selectedTemplate">
+
+    <!-- Step 0: Welcome + restaurant name -->
+    <div x-show="step === 0" class="animate-slide-up">
+      <div class="ch-card p-8 text-center mb-6">
+        <div class="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center text-white text-2xl"
+             style="background:linear-gradient(135deg,var(--accent),var(--accent-hover))">
+          <i class="fas fa-utensils"></i>
+        </div>
+        <h1 class="text-2xl font-bold mb-2" style="color:var(--text)">Bienvenido a Chefy</h1>
+        <p class="text-sm" style="color:var(--text-muted)">
+          En menos de 2 minutos tendrás tu cocina lista para operar.<br>
+          Configuremos tu espacio de trabajo.
+        </p>
+      </div>
+
+      <div class="ch-card p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">
+            ¿Cuál es el nombre de tu restaurante? *
+          </label>
+          <input type="text" class="ch-input text-base" placeholder="Ej: La Parrilla de Don Pedro"
+                 x-model="restaurantName" @input="validateStep0()" autofocus>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-3" style="color:var(--text)">Tipo de establecimiento</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {% for rt in restaurant_types %}
+            <button type="button"
+                    class="p-3 rounded-xl border-2 text-center transition-all cursor-pointer"
+                    :class="restaurantType === '{{ rt.key }}' ? 'border-accent text-accent bg-accent/5' : 'border-border'"
+                    :style="restaurantType === '{{ rt.key }}' ? 'border-color:var(--accent);color:var(--accent);background:var(--accent-glow)' : 'border-color:var(--border);color:var(--text-muted)'"
+                    @click="selectType('{{ rt.key }}')">
+              <i class="fas {{ rt.icon }} text-lg mb-1 block"></i>
+              <span class="text-xs font-medium leading-tight">{{ rt.label }}</span>
+            </button>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 1: Choose template -->
+    <div x-show="step === 1" class="animate-slide-up">
+      <div class="mb-4">
+        <h2 class="text-xl font-bold" style="color:var(--text)">Elige tu template de cocina</h2>
+        <p class="text-sm mt-1" style="color:var(--text-muted)">
+          Precargaremos los ingredientes más comunes para tu tipo de cocina.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {% for key, preview in template_previews.items %}
+        <button type="button"
+                class="ch-card p-4 text-left transition-all cursor-pointer"
+                :class="selectedTemplate === '{{ key }}' ? 'ring-2' : ''"
+                :style="selectedTemplate === '{{ key }}' ? 'ring-color:var(--accent);border-color:var(--accent)' : ''"
+                @click="selectedTemplate = '{{ key }}'">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                 :style="selectedTemplate === '{{ key }}' ? 'background:var(--accent);color:#fff' : 'background:var(--surface-2);color:var(--text-muted)'">
+              <i class="fas fa-layer-group text-sm"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-sm" style="color:var(--text)">{{ preview.label }}</h3>
+                <span class="ch-badge-blue text-xs flex-shrink-0">{{ preview.count }} items</span>
+              </div>
+              <p class="text-xs mt-1" style="color:var(--text-muted)">
+                {% for sample in preview.sample %}{{ sample }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if preview.count > 4 %}...{% endif %}
+              </p>
+            </div>
+          </div>
+          <div x-show="selectedTemplate === '{{ key }}'" class="mt-2 flex items-center gap-1.5 text-xs"
+               style="color:var(--accent)">
+            <i class="fas fa-check-circle"></i> Seleccionado
+          </div>
+        </button>
+        {% endfor %}
+
+        <!-- Skip template option -->
+        <button type="button"
+                class="ch-card p-4 text-left transition-all cursor-pointer border-dashed"
+                :class="selectedTemplate === '' ? 'ring-2' : ''"
+                :style="selectedTemplate === '' ? 'ring-color:var(--accent)' : ''"
+                @click="selectedTemplate = ''">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:var(--surface-2);color:var(--text-muted)">
+              <i class="fas fa-times text-sm"></i>
+            </div>
+            <div>
+              <h3 class="font-semibold text-sm" style="color:var(--text)">Empezar vacío</h3>
+              <p class="text-xs" style="color:var(--text-muted)">Agrego mis ingredientes manualmente</p>
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Confirm + launch -->
+    <div x-show="step === 2" class="animate-slide-up">
+      <div class="ch-card p-8 text-center space-y-4">
+        <div class="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-white text-2xl"
+             style="background:var(--success)">
+          <i class="fas fa-rocket"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold" style="color:var(--text)">¡Todo listo!</h2>
+          <p class="text-sm mt-1" style="color:var(--text-muted)">
+            Configuración de
+            <strong x-text="restaurantName || 'tu cocina'"></strong>
+            <template x-if="selectedTemplate">
+              <span> con el template <strong x-text="templateLabel()"></strong></span>
+            </template>
+          </p>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-left max-w-xs mx-auto">
+          <div class="ch-card p-3 text-center">
+            <p class="text-xs mb-0.5" style="color:var(--text-muted)">Ingredientes</p>
+            <p class="font-bold text-lg" style="color:var(--text)" x-text="templateItemCount()"></p>
+          </div>
+          <div class="ch-card p-3 text-center">
+            <p class="text-xs mb-0.5" style="color:var(--text-muted)">Categorías</p>
+            <p class="font-bold text-lg" style="color:var(--text)" x-text="templateCatCount()"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="flex items-center justify-between mt-6">
+      <div class="flex gap-2">
+        <button type="button" x-show="step > 0" @click="step--" class="ch-btn-secondary py-2.5 px-5">
+          <i class="fas fa-arrow-left mr-1.5"></i> Atrás
+        </button>
+        <form method="post" class="inline" x-show="step === 0">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="skip">
+          <button type="submit" class="ch-btn-ghost text-sm py-2.5 px-3" style="color:var(--text-muted)">
+            Saltar configuración
+          </button>
+        </form>
+      </div>
+
+      <template x-if="step < 2">
+        <button type="button" @click="nextStep()" class="ch-btn-primary py-2.5 px-6"
+                :disabled="step === 0 && !restaurantName"
+                :style="step === 0 && !restaurantName ? 'opacity:0.5;cursor:not-allowed' : ''">
+          Continuar <i class="fas fa-arrow-right ml-1.5"></i>
+        </button>
+      </template>
+
+      <template x-if="step === 2">
+        <button type="submit" class="ch-btn-primary py-2.5 px-6 text-base">
+          <i class="fas fa-rocket mr-1.5"></i> ¡Comenzar!
+        </button>
+      </template>
+    </div>
+  </form>
+</div>
+
+<script>
+function onboarding() {
+  return {
+    step: 0,
+    steps: ['Bienvenida', 'Template', 'Confirmar'],
+    restaurantName: '',
+    restaurantType: '',
+    selectedTemplate: '',
+    templateData: {{ template_previews_json|safe }},
+
+    selectType(key) {
+      this.restaurantType = key;
+      this.selectedTemplate = key;
+    },
+
+    nextStep() {
+      if (this.step === 0 && !this.restaurantName.trim()) return;
+      this.step++;
+    },
+
+    templateLabel() {
+      if (!this.selectedTemplate) return '';
+      const t = this.templateData[this.selectedTemplate];
+      return t ? t.label : '';
+    },
+
+    templateItemCount() {
+      if (!this.selectedTemplate) return '0';
+      const t = this.templateData[this.selectedTemplate];
+      return t ? t.count : '0';
+    },
+
+    templateCatCount() {
+      if (!this.selectedTemplate) return '0';
+      const counts = {
+        'restaurante': 7, 'cafe': 5, 'panaderia': 6,
+        'pizza': 5, 'burger': 5, 'sushi': 5, 'bar': 5, 'catering': 6
+      };
+      return counts[this.selectedTemplate] || 0;
+    },
+  }
+}
+</script>
+{% endblock %}

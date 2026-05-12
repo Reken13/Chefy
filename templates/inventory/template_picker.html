@@ -1,0 +1,64 @@
+{% extends "base/base.html" %}
+{% block title %}Plantillas de Cocina{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+  <div class="flex items-center gap-3">
+    <a href="{% url 'ingredient_list' %}" class="w-8 h-8 rounded-lg flex items-center justify-center"
+       style="background:var(--surface-2);color:var(--text-muted)">
+      <i class="fas fa-arrow-left text-sm"></i>
+    </a>
+    <div>
+      <h1 class="text-xl font-bold" style="color:var(--text)">Plantillas de Cocina</h1>
+      <p class="text-xs mt-0.5" style="color:var(--text-muted)">Carga ingredientes base según tu tipo de cocina</p>
+    </div>
+  </div>
+
+  <div class="ch-card p-4 flex items-start gap-3" style="background:var(--accent-glow)">
+    <i class="fas fa-info-circle mt-0.5 flex-shrink-0" style="color:var(--accent)"></i>
+    <p class="text-sm" style="color:var(--text)">
+      Las plantillas agregan ingredientes predefinidos sin borrar lo que ya tienes.
+      Solo se crean los ingredientes que no existen aún.
+    </p>
+  </div>
+
+  <form method="post" action="{% url 'inventory_load_template' %}">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      {% for tpl in templates %}
+      <label class="ch-card p-5 cursor-pointer block transition-all hover:scale-[1.01]"
+             x-data="{selected: false}"
+             :class="selected ? 'ring-2' : ''"
+             :style="selected ? 'ring-color:var(--accent);border-color:var(--accent)' : ''">
+        <input type="radio" name="template" value="{{ tpl.key }}" class="sr-only"
+               @change="document.querySelectorAll('[x-data]').forEach(el => { if(el._x_dataStack) el._x_dataStack[0].selected = false }); selected = true">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+               :style="selected ? 'background:var(--accent);color:#fff' : 'background:var(--surface-2);color:var(--text-muted)'">
+            <i class="fas fa-layer-group text-sm"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <h3 class="font-semibold text-sm" style="color:var(--text)">{{ tpl.label }}</h3>
+              <span class="ch-badge-blue text-xs">{{ tpl.count }} items</span>
+            </div>
+          </div>
+        </div>
+        <div :class="selected ? 'text-accent' : 'text-muted'" class="mt-2 text-xs flex items-center gap-1"
+             :style="selected ? 'color:var(--accent)' : 'color:var(--text-muted)'">
+          <i :class="selected ? 'fas fa-check-circle' : 'far fa-circle'"></i>
+          <span x-text="selected ? 'Seleccionado' : 'Seleccionar'"></span>
+        </div>
+      </label>
+      {% endfor %}
+    </div>
+
+    <div class="flex gap-3">
+      <button type="submit" class="ch-btn-primary flex-1 justify-center py-3">
+        <i class="fas fa-magic mr-1.5"></i> Cargar plantilla
+      </button>
+      <a href="{% url 'ingredient_list' %}" class="ch-btn-secondary py-3 px-5">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

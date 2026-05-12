@@ -1,0 +1,148 @@
+{% extends "base/base.html" %}
+{% block title %}Importar Ingredientes{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6" x-data="bulkImport()">
+  <div class="flex items-center gap-3">
+    <a href="{% url 'ingredient_list' %}" class="w-8 h-8 rounded-lg flex items-center justify-center"
+       style="background:var(--surface-2);color:var(--text-muted)">
+      <i class="fas fa-arrow-left text-sm"></i>
+    </a>
+    <div>
+      <h1 class="text-xl font-bold" style="color:var(--text)">Importar Ingredientes</h1>
+      <p class="text-xs mt-0.5" style="color:var(--text-muted)">CSV, Excel pegado, o lista de texto</p>
+    </div>
+  </div>
+
+  <!-- Formats info -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    {% for label, example, desc in format_examples %}
+    <div class="ch-card p-4">
+      <p class="text-xs font-semibold uppercase tracking-wide mb-1" style="color:var(--accent)">{{ label }}</p>
+      <code class="text-xs block mb-1" style="color:var(--text)">{{ example }}</code>
+      <p class="text-xs" style="color:var(--text-muted)">{{ desc }}</p>
+    </div>
+    {% empty %}
+    <div class="ch-card p-4">
+      <p class="text-xs font-semibold uppercase tracking-wide mb-1" style="color:var(--accent)">Lenguaje natural</p>
+      <code class="text-xs block mb-1" style="color:var(--text)">Tomate 5kg</code>
+      <p class="text-xs" style="color:var(--text-muted)">Un ítem por línea</p>
+    </div>
+    <div class="ch-card p-4">
+      <p class="text-xs font-semibold uppercase tracking-wide mb-1" style="color:var(--accent)">CSV</p>
+      <code class="text-xs block mb-1" style="color:var(--text)">Pollo, 10, kg</code>
+      <p class="text-xs" style="color:var(--text-muted)">nombre, cantidad, unidad</p>
+    </div>
+    <div class="ch-card p-4">
+      <p class="text-xs font-semibold uppercase tracking-wide mb-1" style="color:var(--accent)">Excel pegado</p>
+      <code class="text-xs block mb-1" style="color:var(--text)">Leche; 3; litros</code>
+      <p class="text-xs" style="color:var(--text-muted)">separado por punto y coma</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+
+    {% if preview %}
+    <!-- Preview results -->
+    <div class="ch-card overflow-hidden">
+      <div class="px-5 py-3 border-b flex items-center justify-between" style="border-color:var(--border)">
+        <h2 class="font-semibold text-sm" style="color:var(--text)">
+          Vista previa — {{ items|length }} ítem{{ items|length|pluralize:"s" }}
+        </h2>
+        <span class="ch-badge-green text-xs">Listos para importar</span>
+      </div>
+      <div class="divide-y" style="border-color:var(--border)">
+        {% for item in items %}
+        <div class="flex items-center gap-3 px-5 py-2.5 {% if not item.valid %}opacity-50{% endif %}">
+          <div class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 text-xs"
+               style="{% if item.valid %}background:rgba(34,197,94,0.12);color:#22c55e{% else %}background:rgba(239,68,68,0.12);color:#ef4444{% endif %}">
+            <i class="fas fa-{% if item.valid %}check{% else %}times{% endif %}"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <span class="text-sm font-medium" style="color:var(--text)">{{ item.name }}</span>
+            {% if item.suggested_category %}
+            <span class="ch-badge-gray text-xs ml-2">{{ item.suggested_category }}</span>
+            {% endif %}
+          </div>
+          <div class="text-right text-sm flex-shrink-0">
+            <span class="font-semibold" style="color:var(--text)">{{ item.quantity|floatformat:2 }}</span>
+            <span class="ml-1" style="color:var(--text-muted)">{{ item.unit }}</span>
+          </div>
+          <div class="w-20 flex-shrink-0 text-xs" style="color:var(--text-muted)">{{ item.suggested_location }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <input type="hidden" name="text" value="{{ text }}">
+    <div class="flex gap-3">
+      <button type="submit" name="action" value="import" class="ch-btn-primary flex-1 justify-center py-2.5">
+        <i class="fas fa-file-import mr-1.5"></i> Importar {{ items|length }} ingredientes
+      </button>
+      <button type="submit" name="action" value="preview" class="ch-btn-secondary py-2.5 px-5">Volver a editar</button>
+    </div>
+
+    {% else %}
+    <!-- Input area -->
+    <div class="ch-card p-5 space-y-3">
+      <label class="block text-sm font-medium" style="color:var(--text)">
+        Pega tu lista de ingredientes
+      </label>
+      <textarea name="text" rows="12" class="ch-input font-mono text-sm"
+                placeholder="Tomate 5kg&#10;Leche 3L&#10;Pollo 10kg&#10;Cebolla, 2, kg&#10;Ajo; 0.5; kg&#10;Sal 1kg&#10;..."
+                x-model="textValue">{{ text }}</textarea>
+      <div class="flex items-center gap-3 text-xs" style="color:var(--text-muted)">
+        <span x-text="lineCount() + ' líneas'"></span>
+        <span>&middot;</span>
+        <span>Un ingrediente por línea</span>
+      </div>
+    </div>
+
+    <!-- Quick paste buttons -->
+    <div class="ch-card p-4">
+      <p class="text-xs font-medium mb-3" style="color:var(--text-muted)">Plantilla de ejemplo:</p>
+      <button type="button" @click="loadExample()" class="ch-btn-secondary text-xs py-1.5">
+        <i class="fas fa-file-alt mr-1"></i> Cargar ejemplo
+      </button>
+    </div>
+
+    <div class="flex gap-3">
+      <button type="submit" name="action" value="preview" class="ch-btn-primary flex-1 justify-center py-2.5"
+              :disabled="!textValue.trim()" :style="!textValue.trim() ? 'opacity:0.5' : ''">
+        <i class="fas fa-eye mr-1.5"></i> Vista previa
+      </button>
+      <a href="{% url 'ingredient_list' %}" class="ch-btn-secondary py-2.5 px-5">Cancelar</a>
+    </div>
+    {% endif %}
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function bulkImport() {
+  return {
+    textValue: `{{ text|escapejs }}`,
+    lineCount() {
+      return this.textValue.split('\n').filter(l => l.trim()).length;
+    },
+    loadExample() {
+      this.textValue = `Pollo entero 5kg
+Tomate 3kg
+Cebolla 2kg
+Ajo 0.5kg
+Aceite vegetal 2l
+Sal 1kg
+Pimienta 100g
+Arroz 5kg
+Frijol negro 2kg
+Leche 5l
+Mantequilla 0.5kg
+Huevos 30 und`;
+    },
+  };
+}
+</script>
+{% endblock %}

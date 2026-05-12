@@ -44,3 +44,75 @@ def toggle_dark_mode(request):
         request.user.dark_mode = not request.user.dark_mode
         request.user.save(update_fields=['dark_mode'])
     return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
+
+
+@login_required
+def onboarding_view(request):
+    from inventory.models import Ingredient, Category
+    from inventory.kitchen_templates import KITCHEN_TEMPLATES, RESTAURANT_TYPES
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'skip':
+            request.session['onboarding_done'] = True
+            return redirect('dashboard')
+
+        if action == 'complete':
+            template_key = request.POST.get('template')
+            restaurant_name = request.POST.get('restaurant_name', '').strip()
+
+            if restaurant_name:
+                request.user.restaurant_name = restaurant_name
+                request.user.save(update_fields=['restaurant_name'])
+
+            if template_key and template_key in KITCHEN_TEMPLATES:
+                template = KITCHEN_TEMPLATES[template_key]
+                cat_map = {}
+                for cat_data in template.get('categories', []):
+                    cat, _ = Category.objects.get_or_create(
+                        name=cat_data['name'],
+                        defaults={'color': cat_data['color'], 'icon': cat_data.get('icon', 'box')}
+                    )
+                    cat_map[cat_data['name']] = cat
+
+                created = 0
+                for ing_data in template.get('ingredients', []):
+                    cat = cat_map.get(ing_data.get('category', ''))
+                    _, was_created = Ingredient.objects.get_or_create(
+                        name__iexact=ing_data['name'],
+                        defaults={
+                            'name': ing_data['name'],
+                            'unit': ing_data['unit'],
+                            'location': ing_data.get('location', 'almacen'),
+                            'minimum_stock': ing_data.get('min_stock', 0),
+                            'category': cat,
+                        }
+                    )
+                    if was_created:
+                        created += 1
+                messages.success(request, f'¡Listo! Cargamos {created} ingredientes base para tu cocina.')
+
+            request.session['onboarding_done'] = True
+            return redirect('dashboard')
+
+    # Build template previews
+    import json
+    template_previews_dict = {}
+    for key, tpl in KITCHEN_TEMPLATES.items():
+        template_previews_dict[key] = {
+            'label': tpl['label'],
+            'count': len(tpl['ingredients']),
+            'sample': [i['name'] for i in tpl['ingredients'][:4]],
+        }
+
+    restaurant_types = [
+        {'key': key, 'label': label, 'icon': icon}
+        for key, label, icon in RESTAURANT_TYPES
+    ]
+
+    return render(request, 'core/onboarding.html', {
+        'restaurant_types': restaurant_types,
+        'template_previews': template_previews_dict,
+        'template_previews_json': json.dumps(template_previews_dict),
+    })

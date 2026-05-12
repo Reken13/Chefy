@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Sum, Count, Q
@@ -8,6 +8,9 @@ from datetime import timedelta
 @login_required
 def dashboard_view(request):
     from inventory.models import Ingredient
+    # Redirect first-time users to onboarding wizard
+    if not request.session.get('onboarding_done') and not Ingredient.objects.exists():
+        return redirect('onboarding')
     from mise_en_place.models import MiseEnPlaceTask
     from equipment.models import EquipmentIssue
     from production.models import ProductionTask

@@ -1,0 +1,14 @@
+{% if results %}
+<div class="absolute z-50 w-full mt-1 ch-card overflow-hidden shadow-lg" style="top:100%;left:0">
+  {% for item in results %}
+  <button type="button"
+          class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-left transition-colors hover:bg-[var(--surface-2)]"
+          style="color:var(--text)"
+          onclick="document.getElementById('quick-add-input').value='{{ item.name }}'; document.getElementById('autocomplete-results').innerHTML='';">
+    <i class="fas fa-box text-xs opacity-40"></i>
+    <span>{{ item.name }}</span>
+    <span class="ml-auto text-xs" style="color:var(--text-muted)">{{ item.unit }}</span>
+  </button>
+  {% endfor %}
+</div>
+{% endif %}
