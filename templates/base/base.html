@@ -106,6 +106,18 @@
       <span class="sidebar-label">Equipos</span>
     </a>
 
+    <div class="sidebar-section-title">Ayuda</div>
+
+    <a href="{% url 'tutorial' %}" class="nav-link {% if request.resolver_match.url_name == 'tutorial' %}active{% endif %}" data-label="Guía del Chef">
+      <span class="nav-icon"><i class="fas fa-book-reader"></i></span>
+      <span class="sidebar-label">Guía del Chef</span>
+    </a>
+
+    <button onclick="startTour()" class="nav-link w-full text-left" data-label="Tour interactivo">
+      <span class="nav-icon"><i class="fas fa-play-circle"></i></span>
+      <span class="sidebar-label">Tour interactivo</span>
+    </button>
+
   </nav>
 
   <!-- Bottom -->
@@ -385,6 +397,39 @@
 {% endif %}
 
 
+<!-- ══════════════ INTERACTIVE TOUR ══════════════ -->
+<div id="tour-overlay" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.7);backdrop-filter:blur(2px)">
+  <div id="tour-card" style="position:fixed;background:var(--surface);border:1px solid var(--border-2);border-radius:16px;padding:24px;max-width:340px;width:calc(100% - 32px);box-shadow:0 24px 48px rgba(0,0,0,0.3)">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div id="tour-icon" style="width:40px;height:40px;border-radius:12px;background:rgba(99,102,241,0.12);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">
+        <i id="tour-icon-el" class="fas fa-home"></i>
+      </div>
+      <div style="flex:1">
+        <p id="tour-step-label" style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Paso 1 de 6</p>
+        <p id="tour-title" style="font-size:15px;font-weight:700;color:var(--text)">Dashboard</p>
+      </div>
+      <button onclick="closeTour()" style="width:28px;height:28px;border-radius:8px;background:var(--surface-2);color:var(--text-muted);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <p id="tour-desc" style="font-size:13px;line-height:1.6;color:var(--text-muted);margin-bottom:16px"></p>
+    <div id="tour-tip" style="display:none;padding:10px 12px;border-radius:10px;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15);margin-bottom:16px">
+      <p style="font-size:11px;font-weight:600;color:var(--accent);margin-bottom:4px"><i class="fas fa-lightbulb" style="margin-right:4px"></i>Consejo</p>
+      <p id="tour-tip-text" style="font-size:12px;color:var(--text-muted)"></p>
+    </div>
+    <!-- Progress dots -->
+    <div style="display:flex;gap:6px;margin-bottom:16px;justify-content:center" id="tour-dots"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="tourPrev()" id="tour-prev" style="flex:1;padding:9px;border-radius:10px;background:var(--surface-2);color:var(--text-muted);border:none;cursor:pointer;font-size:13px;font-weight:500">
+        <i class="fas fa-arrow-left" style="margin-right:4px"></i> Anterior
+      </button>
+      <button onclick="tourNext()" id="tour-next" style="flex:1;padding:9px;border-radius:10px;background:var(--accent);color:white;border:none;cursor:pointer;font-size:13px;font-weight:600">
+        Siguiente <i class="fas fa-arrow-right" style="margin-left:4px"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════ TOAST CONTAINER ══════════════ -->
 <div id="toast-container" class="toast-container"></div>
 
@@ -541,5 +586,150 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 {% block extra_js %}{% endblock %}
+
+<script>
+// ── Interactive Tour ──────────────────────────────────────────────
+const TOUR_STEPS = [
+  {
+    icon: 'th-large',
+    title: 'Dashboard',
+    desc: 'Tu resumen del día. De un vistazo ves el stock bajo, tareas pendientes, desperdicios y alertas de equipos. Empieza aquí cada mañana antes del servicio.',
+    tip: 'Comprueba el dashboard al llegar a la cocina. Si ves alertas rojas, atiéndelas primero.',
+    url: '/',
+  },
+  {
+    icon: 'tasks',
+    title: 'Mise en Place',
+    desc: 'El tablero de tareas del día. Crea tareas para tu equipo, asigna responsables y marca el avance antes del servicio. Funciona como un tablero kanban: Pendiente → En proceso → Listo.',
+    tip: 'Crea las tareas del día siguiente la noche anterior. Tu equipo llegará sabiendo qué hacer.',
+    url: '/mise-en-place/',
+  },
+  {
+    icon: 'box',
+    title: 'Inventario',
+    desc: 'Todo tu stock en tiempo real. Agrega ingredientes escribiendo en lenguaje natural: "Tomate 5kg", "Leche 3L". Chefy detecta unidades, categoría y ubicación automáticamente.',
+    tip: 'Configura un stock mínimo para cada ingrediente. Chefy te avisa cuando toca pedir.',
+    url: '/inventario/',
+  },
+  {
+    icon: 'book-open',
+    title: 'Recetas',
+    desc: 'Crea tus recetas con ingredientes del inventario y Chefy calcula el food cost, costo por porción y margen de ganancia automáticamente. Escala recetas al doble o triple con un clic.',
+    tip: 'Apunta el precio de venta en cada receta. Chefy te dirá si tu food cost está bien o si estás vendiendo barato.',
+    url: '/recetas/',
+  },
+  {
+    icon: 'shopping-cart',
+    title: 'Compras',
+    desc: 'Genera automáticamente una lista de compras con todo lo que está bajo el mínimo de stock. Sin revisar ingrediente por ingrediente, Chefy lo hace por ti.',
+    tip: 'Genera la lista los miércoles para recibir pedidos antes del fin de semana, que es cuando más se trabaja.',
+    url: '/compras/',
+  },
+  {
+    icon: 'plus',
+    title: 'Botón + (Acciones rápidas)',
+    desc: 'El botón naranja en la esquina inferior derecha abre acciones rápidas: nueva tarea de mise en place, registrar desperdicio, reportar equipo dañado o generar lista de compras.',
+    tip: 'Usa las acciones rápidas para registrar cosas al vuelo, sin perder el hilo de lo que estás haciendo.',
+    url: null,
+  },
+];
+
+let tourStep = 0;
+
+function startTour() {
+  tourStep = 0;
+  renderTour();
+  document.getElementById('tour-overlay').style.display = 'flex';
+  document.getElementById('tour-overlay').style.alignItems = 'center';
+  document.getElementById('tour-overlay').style.justifyContent = 'center';
+}
+
+function closeTour() {
+  document.getElementById('tour-overlay').style.display = 'none';
+  localStorage.setItem('chefy-tour-done', '1');
+}
+
+function tourNext() {
+  if (tourStep < TOUR_STEPS.length - 1) {
+    tourStep++;
+    renderTour();
+  } else {
+    closeTour();
+    // Show completion toast
+    if (typeof chefyApp === 'function') return;
+    const container = document.getElementById('toast-container');
+    if (container) {
+      const t = document.createElement('div');
+      t.className = 'toast toast-success';
+      t.innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e"></i><span>¡Tour completado! Ya conoces Chefy.</span>';
+      container.appendChild(t);
+      setTimeout(() => { t.style.animation = 'toastOut 200ms ease forwards'; setTimeout(() => t.remove(), 200); }, 3500);
+    }
+  }
+}
+
+function tourPrev() {
+  if (tourStep > 0) { tourStep--; renderTour(); }
+}
+
+function renderTour() {
+  const step = TOUR_STEPS[tourStep];
+  document.getElementById('tour-icon-el').className = 'fas fa-' + step.icon;
+  document.getElementById('tour-title').textContent = step.title;
+  document.getElementById('tour-step-label').textContent = `Paso ${tourStep + 1} de ${TOUR_STEPS.length}`;
+  document.getElementById('tour-desc').textContent = step.desc;
+
+  const tipEl = document.getElementById('tour-tip');
+  if (step.tip) {
+    document.getElementById('tour-tip-text').textContent = step.tip;
+    tipEl.style.display = 'block';
+  } else {
+    tipEl.style.display = 'none';
+  }
+
+  // Dots
+  const dotsEl = document.getElementById('tour-dots');
+  dotsEl.innerHTML = '';
+  TOUR_STEPS.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.style.cssText = `width:${i === tourStep ? '20px' : '8px'};height:8px;border-radius:4px;background:${i === tourStep ? 'var(--accent)' : 'var(--border-2)'};transition:all 0.2s`;
+    dotsEl.appendChild(d);
+  });
+
+  // Prev button
+  const prevBtn = document.getElementById('tour-prev');
+  prevBtn.style.display = tourStep === 0 ? 'none' : 'block';
+
+  // Next button
+  const nextBtn = document.getElementById('tour-next');
+  if (tourStep === TOUR_STEPS.length - 1) {
+    nextBtn.innerHTML = '<i class="fas fa-check" style="margin-right:4px"></i> ¡Listo!';
+  } else {
+    nextBtn.innerHTML = 'Siguiente <i class="fas fa-arrow-right" style="margin-left:4px"></i>';
+  }
+
+  // Navigate to page if specified
+  if (step.url && window.location.pathname !== step.url) {
+    // Don't navigate automatically — just show the info
+  }
+}
+
+// Auto-start tour on first visit
+document.addEventListener('DOMContentLoaded', () => {
+  {% if user.is_authenticated %}
+  if (!localStorage.getItem('chefy-tour-done') && !localStorage.getItem('chefy-tour-skipped')) {
+    // Delay slightly so page renders first
+    setTimeout(() => {
+      if (document.getElementById('tour-overlay')) {
+        // Only auto-start on dashboard
+        if (window.location.pathname === '/' || window.location.pathname === '/dashboard/') {
+          startTour();
+        }
+      }
+    }, 1200);
+  }
+  {% endif %}
+});
+</script>
 </body>
 </html>

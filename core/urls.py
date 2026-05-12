@@ -7,4 +7,5 @@ urlpatterns = [
     path('perfil/', views.profile_view, name='profile'),
     path('dark-mode/', views.toggle_dark_mode, name='toggle_dark_mode'),
     path('onboarding/', views.onboarding_view, name='onboarding'),
+    path('tutorial/', views.tutorial_view, name='tutorial'),
 ]

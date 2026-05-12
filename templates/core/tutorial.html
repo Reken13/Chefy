@@ -1,0 +1,493 @@
+{% extends "base/base.html" %}
+{% block title %}Guía del Chef{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8" x-data="{ activeSection: 'inicio' }">
+
+  <!-- Hero -->
+  <div class="ch-card overflow-hidden relative">
+    <div class="absolute inset-0 opacity-5" style="background:linear-gradient(135deg,var(--accent),#818cf8)"></div>
+    <div class="relative p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl flex-shrink-0"
+           style="background:linear-gradient(135deg,var(--accent),#818cf8)">
+        <i class="fas fa-hat-chef"></i>
+      </div>
+      <div class="flex-1">
+        <h1 class="text-2xl font-bold mb-1" style="color:var(--text)">Guía del Chef</h1>
+        <p class="text-sm leading-relaxed" style="color:var(--text-muted)">
+          Todo lo que necesitas saber para gestionar tu cocina con Chefy. Simple, rápido y pensado para el día a día.
+        </p>
+      </div>
+      <button onclick="startTour()" class="ch-btn-primary flex-shrink-0 py-2.5 px-5">
+        <i class="fas fa-play mr-2"></i> Tour interactivo
+      </button>
+    </div>
+  </div>
+
+  <!-- Nav tabs -->
+  <div class="flex overflow-x-auto gap-1 pb-1 hide-scroll">
+    {% for sec in sections %}
+    <button @click="activeSection='{{ sec.key }}'"
+            class="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+            :class="activeSection==='{{ sec.key }}' ? 'text-white' : ''"
+            :style="activeSection==='{{ sec.key }}' ? 'background:var(--accent)' : 'background:var(--surface-2);color:var(--text-muted)'">
+      <i class="fas fa-{{ sec.icon }} mr-1.5"></i>{{ sec.label }}
+    </button>
+    {% endfor %}
+  </div>
+
+  <!-- ─── INICIO ─── -->
+  <div x-show="activeSection==='inicio'" x-transition>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <div class="ch-card p-5 space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white"
+               style="background:linear-gradient(135deg,var(--accent),#818cf8)">
+            <i class="fas fa-rocket"></i>
+          </div>
+          <h2 class="font-bold" style="color:var(--text)">Configura tu cocina en 5 min</h2>
+        </div>
+        <ol class="space-y-3">
+          <li class="flex gap-3">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5" style="background:var(--accent)">1</span>
+            <div>
+              <p class="text-sm font-medium" style="color:var(--text)">Ponle nombre a tu restaurante</p>
+              <p class="text-xs mt-0.5" style="color:var(--text-muted)">Ve a tu perfil y escribe el nombre de tu cocina.</p>
+            </div>
+          </li>
+          <li class="flex gap-3">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5" style="background:var(--accent)">2</span>
+            <div>
+              <p class="text-sm font-medium" style="color:var(--text)">Carga tu tipo de cocina</p>
+              <p class="text-xs mt-0.5" style="color:var(--text-muted)">El asistente carga ingredientes base según si eres restaurante, café, panadería...</p>
+            </div>
+          </li>
+          <li class="flex gap-3">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5" style="background:var(--accent)">3</span>
+            <div>
+              <p class="text-sm font-medium" style="color:var(--text)">Ajusta tu inventario inicial</p>
+              <p class="text-xs mt-0.5" style="color:var(--text-muted)">Escribe cuánto tienes de cada cosa. Chefy calcula alertas automáticamente.</p>
+            </div>
+          </li>
+          <li class="flex gap-3">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5" style="background:var(--accent)">4</span>
+            <div>
+              <p class="text-sm font-medium" style="color:var(--text)">Crea tus primeras recetas</p>
+              <p class="text-xs mt-0.5" style="color:var(--text-muted)">Chefy calcula el food cost y el margen de ganancia automáticamente.</p>
+            </div>
+          </li>
+        </ol>
+        <a href="{% url 'onboarding' %}" class="ch-btn-primary w-full justify-center">
+          <i class="fas fa-magic mr-1.5"></i> Abrir asistente de configuración
+        </a>
+      </div>
+
+      <div class="space-y-4">
+        <div class="ch-card p-5">
+          <h3 class="font-semibold text-sm mb-3 flex items-center gap-2" style="color:var(--text)">
+            <i class="fas fa-keyboard" style="color:var(--accent)"></i> Atajos de teclado
+          </h3>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-sm" style="color:var(--text-muted)">Búsqueda rápida</span>
+              <div class="flex gap-1">
+                <kbd class="kbd">⌘</kbd><kbd class="kbd">K</kbd>
+              </div>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm" style="color:var(--text-muted)">Navegar resultados</span>
+              <div class="flex gap-1">
+                <kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd>
+              </div>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm" style="color:var(--text-muted)">Seleccionar / Abrir</span>
+              <kbd class="kbd">↵</kbd>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm" style="color:var(--text-muted)">Cerrar ventana</span>
+              <kbd class="kbd">Esc</kbd>
+            </div>
+          </div>
+        </div>
+
+        <div class="ch-card p-5">
+          <h3 class="font-semibold text-sm mb-3 flex items-center gap-2" style="color:var(--text)">
+            <i class="fas fa-plus-circle" style="color:#22c55e"></i> Botón flotante (+)
+          </h3>
+          <p class="text-sm mb-3" style="color:var(--text-muted)">El botón <strong style="color:var(--text)">+</strong> en la esquina inferior derecha abre acciones rápidas:</p>
+          <ul class="space-y-1.5">
+            <li class="flex items-center gap-2 text-sm" style="color:var(--text-muted)">
+              <i class="fas fa-tasks w-4 text-center" style="color:var(--accent)"></i> Nueva tarea de mise en place
+            </li>
+            <li class="flex items-center gap-2 text-sm" style="color:var(--text-muted)">
+              <i class="fas fa-trash-alt w-4 text-center" style="color:#ef4444"></i> Registrar desperdicio
+            </li>
+            <li class="flex items-center gap-2 text-sm" style="color:var(--text-muted)">
+              <i class="fas fa-wrench w-4 text-center" style="color:#f97316"></i> Reportar equipo dañado
+            </li>
+            <li class="flex items-center gap-2 text-sm" style="color:var(--text-muted)">
+              <i class="fas fa-shopping-cart w-4 text-center" style="color:#22c55e"></i> Generar lista de compras
+            </li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── INVENTARIO ─── -->
+  <div x-show="activeSection==='inventario'" x-transition>
+    <div class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="ch-card p-5 space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                 style="background:rgba(59,130,246,0.12);color:#3b82f6">
+              <i class="fas fa-bolt"></i>
+            </div>
+            <h2 class="font-bold" style="color:var(--text)">Quick Add — Agrega rápido</h2>
+          </div>
+          <p class="text-sm" style="color:var(--text-muted)">
+            En la página de inventario, escribe en lenguaje natural. Chefy entiende lo que escribes:
+          </p>
+          <div class="space-y-2">
+            {% for ex in quick_add_examples %}
+            <div class="flex items-center gap-3 p-2.5 rounded-lg" style="background:var(--surface-2)">
+              <i class="fas fa-keyboard text-xs" style="color:var(--text-muted)"></i>
+              <code class="text-sm font-mono flex-1" style="color:var(--accent)">"{{ ex.input }}"</code>
+              <span class="text-xs" style="color:var(--text-muted)">→ {{ ex.result }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          <a href="{% url 'ingredient_list' %}" class="ch-btn-secondary w-full justify-center">
+            <i class="fas fa-box mr-1.5"></i> Ir al inventario
+          </a>
+        </div>
+
+        <div class="ch-card p-5 space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                 style="background:rgba(239,68,68,0.12);color:#ef4444">
+              <i class="fas fa-bell"></i>
+            </div>
+            <h2 class="font-bold" style="color:var(--text)">Alertas automáticas</h2>
+          </div>
+          <p class="text-sm" style="color:var(--text-muted)">
+            Chefy te avisa automáticamente cuando un ingrediente necesita atención:
+          </p>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3 p-3 rounded-xl" style="background:rgba(239,68,68,0.08)">
+              <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#ef4444"></div>
+              <div>
+                <p class="text-sm font-semibold" style="color:#ef4444">Vencido</p>
+                <p class="text-xs" style="color:var(--text-muted)">El producto pasó su fecha de caducidad. Retirarlo.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-xl" style="background:rgba(234,179,8,0.08)">
+              <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#eab308"></div>
+              <div>
+                <p class="text-sm font-semibold" style="color:#ca8a04">Por vencer</p>
+                <p class="text-xs" style="color:var(--text-muted)">Vence en los próximos 3 días. Usarlo primero.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-xl" style="background:rgba(249,115,22,0.08)">
+              <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#f97316"></div>
+              <div>
+                <p class="text-sm font-semibold" style="color:#f97316">Stock bajo</p>
+                <p class="text-xs" style="color:var(--text-muted)">Menos del mínimo configurado. Hay que pedir.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-xl" style="background:rgba(34,197,94,0.08)">
+              <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#22c55e"></div>
+              <div>
+                <p class="text-sm font-semibold" style="color:#16a34a">OK</p>
+                <p class="text-xs" style="color:var(--text-muted)">Stock suficiente y dentro de fecha.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ch-card p-5">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+               style="background:rgba(99,102,241,0.12);color:var(--accent)">
+            <i class="fas fa-file-import"></i>
+          </div>
+          <div>
+            <h2 class="font-bold" style="color:var(--text)">Importar todo de una</h2>
+            <p class="text-sm" style="color:var(--text-muted)">Pega una lista desde Excel, WhatsApp o escríbela línea por línea</p>
+          </div>
+          <a href="{% url 'inventory_bulk_import' %}" class="ch-btn-secondary ml-auto">
+            <i class="fas fa-file-import mr-1.5"></i> Importar
+          </a>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {% for fmt in import_formats %}
+          <div class="p-3 rounded-xl" style="background:var(--surface-2)">
+            <p class="text-xs font-semibold mb-2" style="color:var(--text-muted)">{{ fmt.label }}</p>
+            <code class="text-xs leading-relaxed block whitespace-pre" style="color:var(--accent)">{{ fmt.example }}</code>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MISE EN PLACE ─── -->
+  <div x-show="activeSection==='mise'" x-transition>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="ch-card p-5 space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+               style="background:rgba(99,102,241,0.12);color:var(--accent)">
+            <i class="fas fa-tasks"></i>
+          </div>
+          <h2 class="font-bold" style="color:var(--text)">El tablero del día</h2>
+        </div>
+        <p class="text-sm" style="color:var(--text-muted)">
+          El Mise en Place es tu tablero de tareas diarias. Funciona como un tablero kanban: arrastra las tareas de una columna a otra.
+        </p>
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="p-3 rounded-xl" style="background:var(--surface-2)">
+            <div class="w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center text-xs font-bold text-white" style="background:#6366f1">P</div>
+            <p class="text-xs font-semibold" style="color:var(--text)">Pendiente</p>
+            <p class="text-xs mt-0.5" style="color:var(--text-muted)">Por hacer</p>
+          </div>
+          <div class="p-3 rounded-xl" style="background:var(--surface-2)">
+            <div class="w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center text-xs font-bold text-white" style="background:#f97316">E</div>
+            <p class="text-xs font-semibold" style="color:var(--text)">En proceso</p>
+            <p class="text-xs mt-0.5" style="color:var(--text-muted)">Manos a la obra</p>
+          </div>
+          <div class="p-3 rounded-xl" style="background:var(--surface-2)">
+            <div class="w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center text-xs font-bold text-white" style="background:#22c55e">✓</div>
+            <p class="text-xs font-semibold" style="color:var(--text)">Listo</p>
+            <p class="text-xs mt-0.5" style="color:var(--text-muted)">Terminado</p>
+          </div>
+        </div>
+        <div class="p-3 rounded-xl" style="background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15)">
+          <p class="text-xs font-semibold mb-1" style="color:var(--accent)"><i class="fas fa-lightbulb mr-1"></i> Consejo de chef</p>
+          <p class="text-xs" style="color:var(--text-muted)">Asigna cada tarea a una persona del equipo y pon el tiempo estimado. Así el equipo sabe qué hacer antes del servicio sin preguntar.</p>
+        </div>
+        <a href="{% url 'mise_en_place_kanban' %}" class="ch-btn-primary w-full justify-center">
+          <i class="fas fa-tasks mr-1.5"></i> Ver tablero
+        </a>
+      </div>
+
+      <div class="ch-card p-5 space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+               style="background:rgba(239,68,68,0.12);color:#ef4444">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <h2 class="font-bold" style="color:var(--text)">Prioridades y alertas</h2>
+        </div>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2 p-2.5 rounded-lg" style="background:rgba(239,68,68,0.08)">
+            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#ef4444"></span>
+            <span class="text-xs font-semibold" style="color:#ef4444">Urgente</span>
+            <span class="text-xs ml-auto" style="color:var(--text-muted)">Para antes del servicio</span>
+          </div>
+          <div class="flex items-center gap-2 p-2.5 rounded-lg" style="background:rgba(249,115,22,0.08)">
+            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#f97316"></span>
+            <span class="text-xs font-semibold" style="color:#f97316">Alta</span>
+            <span class="text-xs ml-auto" style="color:var(--text-muted)">Importante, no urgente</span>
+          </div>
+          <div class="flex items-center gap-2 p-2.5 rounded-lg" style="background:rgba(234,179,8,0.08)">
+            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#eab308"></span>
+            <span class="text-xs font-semibold" style="color:#ca8a04">Normal</span>
+            <span class="text-xs ml-auto" style="color:var(--text-muted)">Cuando haya tiempo</span>
+          </div>
+        </div>
+        <p class="text-sm" style="color:var(--text-muted)">
+          Las tareas vencidas aparecen marcadas en rojo en el dashboard para que no se te escape nada antes del servicio.
+        </p>
+        <a href="{% url 'mise_en_place_create' %}" class="ch-btn-secondary w-full justify-center">
+          <i class="fas fa-plus mr-1.5"></i> Crear nueva tarea
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── RECETAS ─── -->
+  <div x-show="activeSection==='recetas'" x-transition>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="ch-card p-5 space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+               style="background:rgba(34,197,94,0.12);color:#16a34a">
+            <i class="fas fa-calculator"></i>
+          </div>
+          <h2 class="font-bold" style="color:var(--text)">Food cost automático</h2>
+        </div>
+        <p class="text-sm" style="color:var(--text-muted)">
+          Crea una receta, agrega los ingredientes con cantidades, y Chefy calcula automáticamente:
+        </p>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between p-2.5 rounded-lg" style="background:var(--surface-2)">
+            <span class="text-sm" style="color:var(--text-muted)">Costo por porción</span>
+            <span class="text-sm font-semibold" style="color:var(--text)">Costo total ÷ porciones</span>
+          </div>
+          <div class="flex items-center justify-between p-2.5 rounded-lg" style="background:var(--surface-2)">
+            <span class="text-sm" style="color:var(--text-muted)">Food cost %</span>
+            <span class="text-sm font-semibold" style="color:var(--text)">(Costo ÷ Precio) × 100</span>
+          </div>
+          <div class="flex items-center justify-between p-2.5 rounded-lg" style="background:var(--surface-2)">
+            <span class="text-sm" style="color:var(--text-muted)">Margen bruto</span>
+            <span class="text-sm font-semibold" style="color:var(--text)">Precio − Costo</span>
+          </div>
+        </div>
+        <div class="p-3 rounded-xl" style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15)">
+          <p class="text-xs font-semibold mb-1" style="color:#16a34a"><i class="fas fa-lightbulb mr-1"></i> Regla de oro</p>
+          <p class="text-xs" style="color:var(--text-muted)">Un food cost menor a <strong style="color:#16a34a">30%</strong> es excelente. Entre 30–35% es aceptable. Más de 35% hay que revisar costos o precio de venta.</p>
+        </div>
+        <a href="{% url 'recipe_list' %}" class="ch-btn-primary w-full justify-center">
+          <i class="fas fa-book-open mr-1.5"></i> Ver recetas
+        </a>
+      </div>
+
+      <div class="ch-card p-5 space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+               style="background:rgba(99,102,241,0.12);color:var(--accent)">
+            <i class="fas fa-expand-arrows-alt"></i>
+          </div>
+          <h2 class="font-bold" style="color:var(--text)">Escalar recetas</h2>
+        </div>
+        <p class="text-sm" style="color:var(--text-muted)">
+          En la vista de cada receta puedes multiplicar las cantidades con un solo clic: ideal cuando tienes un evento grande.
+        </p>
+        <div class="grid grid-cols-4 gap-2">
+          {% for scale in scales %}
+          <div class="text-center p-3 rounded-xl {% if scale.active %}text-white{% endif %}"
+               style="{% if scale.active %}background:var(--accent){% else %}background:var(--surface-2){% endif %}">
+            <p class="text-lg font-bold {% if not scale.active %}{% endif %}" style="{% if not scale.active %}color:var(--text){% endif %}">{{ scale.val }}x</p>
+            <p class="text-xs mt-0.5" style="{% if scale.active %}opacity:0.8{% else %}color:var(--text-muted){% endif %}">{{ scale.label }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="p-3 rounded-xl" style="background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15)">
+          <p class="text-xs" style="color:var(--text-muted)"><i class="fas fa-info-circle mr-1" style="color:var(--accent)"></i> Todos los costos se recalculan automáticamente al escalar.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── COMPRAS ─── -->
+  <div x-show="activeSection==='compras'" x-transition>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="ch-card p-5 space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+               style="background:rgba(234,179,8,0.12);color:#ca8a04">
+            <i class="fas fa-magic"></i>
+          </div>
+          <h2 class="font-bold" style="color:var(--text)">Lista de compras automática</h2>
+        </div>
+        <p class="text-sm" style="color:var(--text-muted)">
+          Chefy revisa tu inventario y genera automáticamente la lista de lo que necesitas pedir, basándose en tus stocks mínimos.
+        </p>
+        <div class="space-y-2">
+          <div class="flex items-start gap-3">
+            <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5" style="background:#ca8a04">1</div>
+            <p class="text-sm" style="color:var(--text-muted)">Ve a <strong style="color:var(--text)">Compras → Generar lista</strong></p>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5" style="background:#ca8a04">2</div>
+            <p class="text-sm" style="color:var(--text-muted)">Chefy muestra todo lo que está por debajo del mínimo</p>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5" style="background:#ca8a04">3</div>
+            <p class="text-sm" style="color:var(--text-muted)">Ajusta cantidades si necesitas, luego envíala a tu proveedor</p>
+          </div>
+        </div>
+        <a href="{% url 'purchase_list_generate' %}" class="ch-btn-primary w-full justify-center">
+          <i class="fas fa-shopping-cart mr-1.5"></i> Generar lista ahora
+        </a>
+      </div>
+
+      <div class="ch-card p-5 space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+               style="background:rgba(249,115,22,0.12);color:#f97316">
+            <i class="fas fa-trash-alt"></i>
+          </div>
+          <h2 class="font-bold" style="color:var(--text)">Controla el desperdicio</h2>
+        </div>
+        <p class="text-sm" style="color:var(--text-muted)">
+          Registra cada vez que tiras comida. Chefy calcula cuánto dinero se pierde cada semana y te ayuda a reducirlo.
+        </p>
+        <div class="p-3 rounded-xl" style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.15)">
+          <p class="text-xs font-semibold mb-1" style="color:#f97316"><i class="fas fa-lightbulb mr-1"></i> Tip de rentabilidad</p>
+          <p class="text-xs" style="color:var(--text-muted)">Una cocina eficiente desperdicia menos del <strong style="color:#f97316">5%</strong> del valor del inventario. Si superas ese número, revisa tus porciones y compras.</p>
+        </div>
+        <a href="{% url 'waste_list' %}" class="ch-btn-secondary w-full justify-center">
+          <i class="fas fa-chart-bar mr-1.5"></i> Ver desperdicios
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── EQUIPOS ─── -->
+  <div x-show="activeSection==='equipos'" x-transition>
+    <div class="ch-card p-5 space-y-5">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+             style="background:rgba(249,115,22,0.12);color:#f97316">
+          <i class="fas fa-wrench"></i>
+        </div>
+        <div>
+          <h2 class="font-bold" style="color:var(--text)">Control de equipos</h2>
+          <p class="text-sm" style="color:var(--text-muted)">Reporta y sigue el estado de cada equipo de cocina</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="p-4 rounded-xl text-center" style="background:rgba(239,68,68,0.08)">
+          <i class="fas fa-exclamation-circle text-2xl mb-2" style="color:#ef4444"></i>
+          <p class="text-sm font-semibold" style="color:#ef4444">Pendiente</p>
+          <p class="text-xs mt-1" style="color:var(--text-muted)">Reportado, esperando técnico</p>
+        </div>
+        <div class="p-4 rounded-xl text-center" style="background:rgba(249,115,22,0.08)">
+          <i class="fas fa-tools text-2xl mb-2" style="color:#f97316"></i>
+          <p class="text-sm font-semibold" style="color:#f97316">En reparación</p>
+          <p class="text-xs mt-1" style="color:var(--text-muted)">El técnico ya está trabajando</p>
+        </div>
+        <div class="p-4 rounded-xl text-center" style="background:rgba(34,197,94,0.08)">
+          <i class="fas fa-check-circle text-2xl mb-2" style="color:#22c55e"></i>
+          <p class="text-sm font-semibold" style="color:#22c55e">Resuelto</p>
+          <p class="text-xs mt-1" style="color:var(--text-muted)">Equipo operativo de nuevo</p>
+        </div>
+      </div>
+      <div class="p-4 rounded-xl" style="background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15)">
+        <p class="text-xs font-semibold mb-1.5" style="color:var(--accent)"><i class="fas fa-lightbulb mr-1"></i> Buena práctica</p>
+        <p class="text-xs" style="color:var(--text-muted)">Reporta cualquier problema de equipo apenas lo notes, aunque sea menor. Un registro historial ayuda cuando negocies con proveedores de mantenimiento o necesites justificar una compra nueva.</p>
+      </div>
+      <a href="{% url 'equipment_issue_create' %}" class="ch-btn-primary">
+        <i class="fas fa-plus mr-1.5"></i> Reportar problema de equipo
+      </a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-family: monospace;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border-2);
+}
+.hide-scroll::-webkit-scrollbar { display: none; }
+.hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+{% endblock %}

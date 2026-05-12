@@ -47,6 +47,41 @@ def toggle_dark_mode(request):
 
 
 @login_required
+def tutorial_view(request):
+    sections = [
+        {'key': 'inicio',      'label': 'Inicio',      'icon': 'home'},
+        {'key': 'inventario',  'label': 'Inventario',  'icon': 'box'},
+        {'key': 'mise',        'label': 'Mise en Place','icon': 'tasks'},
+        {'key': 'recetas',     'label': 'Recetas',     'icon': 'book-open'},
+        {'key': 'compras',     'label': 'Compras',     'icon': 'shopping-cart'},
+        {'key': 'equipos',     'label': 'Equipos',     'icon': 'wrench'},
+    ]
+    quick_add_examples = [
+        {'input': 'Tomate 5kg',    'result': '5 kg · Vegetales · Nevera'},
+        {'input': 'Leche 3L',      'result': '3 L · Lácteos · Nevera'},
+        {'input': 'Harina 10kg',   'result': '10 kg · Secos · Almacén'},
+        {'input': 'Pollo 8kg',     'result': '8 kg · Carnes · Congelador'},
+    ]
+    import_formats = [
+        {'label': 'Natural',  'example': 'Tomate 5kg\nLeche 3L\nPollo 8kg'},
+        {'label': 'CSV',      'example': 'Tomate, 5, kg\nLeche, 3, L\nPollo, 8, kg'},
+        {'label': 'Punto y coma', 'example': 'Tomate; 5; kg\nLeche; 3; L'},
+    ]
+    scales = [
+        {'val': '0.5', 'label': 'Mitad',  'active': False},
+        {'val': '1',   'label': 'Normal', 'active': True},
+        {'val': '2',   'label': 'Doble',  'active': False},
+        {'val': '3',   'label': 'Triple', 'active': False},
+    ]
+    return render(request, 'core/tutorial.html', {
+        'sections': sections,
+        'quick_add_examples': quick_add_examples,
+        'import_formats': import_formats,
+        'scales': scales,
+    })
+
+
+@login_required
 def onboarding_view(request):
     from inventory.models import Ingredient, Category
     from inventory.kitchen_templates import KITCHEN_TEMPLATES, RESTAURANT_TYPES
