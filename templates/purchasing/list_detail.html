@@ -1,0 +1,54 @@
+{% extends "base/base.html" %}
+{% block title %}{{ purchase_list.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-5">
+  <div class="flex flex-wrap items-center gap-3">
+    <a href="{% url 'purchase_list_index' %}" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i class="fas fa-arrow-left"></i></a>
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white flex-1">{{ purchase_list.name }}</h1>
+    <span class="badge
+      {% if purchase_list.status == 'recibido' %}bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300
+      {% elif purchase_list.status == 'pedido' %}bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300
+      {% else %}bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300{% endif %}">
+      {{ purchase_list.get_status_display }}
+    </span>
+  </div>
+
+  <div class="card p-4 flex flex-wrap gap-4 text-sm">
+    <div><span class="text-gray-500 dark:text-gray-400">Total estimado:</span> <span class="font-bold text-gray-900 dark:text-white">${{ purchase_list.total_estimated_cost|floatformat:0 }}</span></div>
+    <div><span class="text-gray-500 dark:text-gray-400">Ítems:</span> <span class="font-bold text-gray-900 dark:text-white">{{ purchase_list.items_count }}</span></div>
+    <div><span class="text-gray-500 dark:text-gray-400">Pendientes:</span> <span class="font-bold text-orange-600 dark:text-orange-400">{{ purchase_list.pending_items }}</span></div>
+  </div>
+
+  {% for supplier, items in items_by_supplier.items %}
+  <div class="card overflow-hidden">
+    <div class="px-5 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+      <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm flex items-center gap-2">
+        <i class="fas fa-truck text-brand-500"></i> {{ supplier }}
+      </h2>
+    </div>
+    <div class="divide-y divide-gray-50 dark:divide-gray-700/50">
+      {% for item in items %}
+      <div class="flex items-center gap-3 px-5 py-3 {% if item.is_purchased %}opacity-50{% endif %}">
+        <form method="post" action="{% url 'mark_item_purchased' item.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 transition
+            {% if item.is_purchased %}bg-green-100 dark:bg-green-900/30 border-green-400 text-green-600 dark:text-green-400{% else %}border-gray-300 dark:border-gray-600 hover:border-brand-400{% endif %}">
+            {% if item.is_purchased %}<i class="fas fa-check text-xs"></i>{% endif %}
+          </button>
+        </form>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-gray-900 dark:text-white {% if item.is_purchased %}line-through{% endif %}">{{ item.ingredient.name }}</p>
+          {% if item.notes %}<p class="text-xs text-gray-400 dark:text-gray-500">{{ item.notes }}</p>{% endif %}
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.quantity_needed|floatformat:3 }} {{ item.ingredient.unit }}</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500">${{ item.estimated_cost|floatformat:2 }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

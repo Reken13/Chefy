@@ -1,0 +1,139 @@
+{% extends "base/base.html" %}
+{% block title %}Inventario{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+
+  <!-- Header -->
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Inventario</h1>
+      <p class="text-gray-500 dark:text-gray-400 text-sm">{{ ingredients|length }} ingredientes · Valor total: <span class="font-semibold text-gray-700 dark:text-gray-300">${{ total_value|floatformat:0 }}</span></p>
+    </div>
+    <div class="flex gap-2">
+      <a href="{% url 'purchase_list_generate' %}" class="btn-secondary">
+        <i class="fas fa-shopping-cart"></i> <span class="hidden sm:inline">Generar Compras</span>
+      </a>
+      <a href="{% url 'ingredient_create' %}" class="btn-primary">
+        <i class="fas fa-plus"></i> <span class="hidden sm:inline">Nuevo</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <form method="get" class="card p-3 flex flex-wrap gap-2 items-end">
+    <div class="flex-1 min-w-[180px]">
+      <input type="text" name="q" value="{{ q }}" placeholder="Buscar ingrediente..." class="form-input">
+    </div>
+    <select name="category" class="form-select max-w-[150px]">
+      <option value="">Categoría</option>
+      {% for cat in categories %}
+      <option value="{{ cat.pk }}" {% if selected_category == cat.pk|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+      {% endfor %}
+    </select>
+    <select name="location" class="form-select max-w-[130px]">
+      <option value="">Ubicación</option>
+      {% for val, label in locations %}
+      <option value="{{ val }}" {% if selected_location == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select name="status" class="form-select max-w-[130px]">
+      <option value="">Estado</option>
+      <option value="bajo" {% if selected_status == 'bajo' %}selected{% endif %}>Stock bajo</option>
+      <option value="venciendo" {% if selected_status == 'venciendo' %}selected{% endif %}>Por vencer</option>
+      <option value="vencido" {% if selected_status == 'vencido' %}selected{% endif %}>Vencidos</option>
+    </select>
+    <button type="submit" class="btn-primary py-2.5 px-4">
+      <i class="fas fa-search"></i>
+    </button>
+    {% if q or selected_category or selected_location or selected_status %}
+    <a href="{% url 'ingredient_list' %}" class="btn-secondary py-2.5 px-3">
+      <i class="fas fa-times"></i>
+    </a>
+    {% endif %}
+  </form>
+
+  <!-- Ingredients grid -->
+  {% if ingredients %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+    {% for item in ingredients %}
+    <div class="card hover:shadow-md transition group relative overflow-hidden">
+      {% if item.is_expired %}
+      <div class="absolute top-0 left-0 right-0 h-1 bg-red-500"></div>
+      {% elif item.is_low_stock %}
+      <div class="absolute top-0 left-0 right-0 h-1 bg-orange-500"></div>
+      {% elif item.is_expiring_soon %}
+      <div class="absolute top-0 left-0 right-0 h-1 bg-yellow-400"></div>
+      {% else %}
+      <div class="absolute top-0 left-0 right-0 h-1 bg-green-500"></div>
+      {% endif %}
+      <div class="p-4">
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <h3 class="font-semibold text-gray-900 dark:text-white text-sm">{{ item.name }}</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500">{{ item.get_location_display }}{% if item.category %} · {{ item.category.name }}{% endif %}</p>
+          </div>
+          <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+            <a href="{% url 'adjust_stock' item.pk %}" class="w-7 h-7 bg-brand-100 dark:bg-brand-900/30 hover:bg-brand-200 text-brand-600 dark:text-brand-400 rounded-lg flex items-center justify-center" title="Ajustar stock">
+              <i class="fas fa-plus-minus text-xs"></i>
+            </a>
+            <a href="{% url 'ingredient_edit' item.pk %}" class="w-7 h-7 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-lg flex items-center justify-center" title="Editar">
+              <i class="fas fa-pen text-xs"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Stock bar -->
+        <div class="mb-2">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-lg font-bold {% if item.is_expired %}text-red-600 dark:text-red-400{% elif item.is_low_stock %}text-orange-600 dark:text-orange-400{% else %}text-gray-900 dark:text-white{% endif %}">
+              {{ item.current_stock|floatformat:2 }}
+            </span>
+            <span class="text-xs text-gray-400 dark:text-gray-500">{{ item.unit }}</span>
+          </div>
+          {% if item.minimum_stock > 0 %}
+          <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
+            <div class="h-1.5 rounded-full {% if item.is_low_stock %}bg-orange-500{% else %}bg-green-500{% endif %}" style="width: {{ item.stock_percentage }}%"></div>
+          </div>
+          <div class="flex justify-between mt-0.5">
+            <span class="text-xs text-gray-400 dark:text-gray-500">mín: {{ item.minimum_stock }}{{ item.unit }}</span>
+            <span class="text-xs font-medium {% if item.is_low_stock %}text-orange-500{% else %}text-green-600 dark:text-green-400{% endif %}">{{ item.stock_percentage }}%</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Badges -->
+        <div class="flex flex-wrap gap-1 mt-2">
+          {% if item.is_expired %}
+          <span class="badge bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+            <i class="fas fa-exclamation-triangle mr-1"></i>Vencido
+          </span>
+          {% elif item.is_expiring_soon %}
+          <span class="badge bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">
+            <i class="fas fa-clock mr-1"></i>Vence {{ item.expiry_date|date:"d/m" }}
+          </span>
+          {% endif %}
+          {% if item.is_low_stock %}
+          <span class="badge bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300">
+            <i class="fas fa-arrow-down mr-1"></i>Stock bajo
+          </span>
+          {% endif %}
+          {% if item.cost_per_unit > 0 %}
+          <span class="badge bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">${{ item.cost_per_unit }}/{{ item.unit }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card p-12 text-center">
+    <i class="fas fa-box-open text-4xl text-gray-300 dark:text-gray-600 mb-3"></i>
+    <p class="text-gray-500 dark:text-gray-400 font-medium">No hay ingredientes{% if q %} que coincidan con "{{ q }}"{% endif %}</p>
+    <a href="{% url 'ingredient_create' %}" class="btn-primary mt-4 inline-flex">
+      <i class="fas fa-plus"></i> Agregar primer ingrediente
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

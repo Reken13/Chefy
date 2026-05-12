@@ -1,0 +1,79 @@
+{% extends "base/base.html" %}
+{% block title %}Producción{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Producción Diaria</h1>
+      <div class="flex items-center gap-3 mt-1">
+        <form method="get" class="flex items-center gap-2">
+          <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}" class="form-input text-sm max-w-[150px] py-1.5" onchange="this.form.submit()">
+        </form>
+        {% if selected_date != today %}
+        <a href="{% url 'production_list' %}" class="text-sm text-brand-500 hover:underline">Hoy</a>
+        {% endif %}
+      </div>
+    </div>
+    <a href="{% url 'production_create' %}" class="btn-primary"><i class="fas fa-plus"></i> Nueva Producción</a>
+  </div>
+
+  <!-- Summary -->
+  <div class="grid grid-cols-3 gap-3">
+    <div class="card p-4 text-center">
+      <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Pendiente</p>
+      <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ pending.count }}</p>
+    </div>
+    <div class="card p-4 text-center">
+      <p class="text-xs text-brand-500 mb-1">En Proceso</p>
+      <p class="text-3xl font-bold text-brand-600 dark:text-brand-400">{{ in_progress.count }}</p>
+    </div>
+    <div class="card p-4 text-center">
+      <p class="text-xs text-green-600 dark:text-green-400 mb-1">Terminado</p>
+      <p class="text-3xl font-bold text-green-600 dark:text-green-400">{{ done.count }}</p>
+    </div>
+  </div>
+
+  <!-- Task list -->
+  <div class="space-y-3">
+    {% for task in tasks %}
+    <div class="card p-4 flex items-center gap-4 {% if task.status == 'terminado' %}opacity-60{% endif %}">
+      <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
+        <i class="fas fa-fire text-orange-500 dark:text-orange-400"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h3 class="font-semibold text-gray-900 dark:text-white {% if task.status == 'terminado' %}line-through{% endif %}">{{ task.recipe.name }}</h3>
+        <div class="flex flex-wrap gap-3 text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <span><i class="fas fa-balance-scale mr-1"></i>{{ task.quantity }} {{ task.unit }}</span>
+          {% if task.assigned_to %}<span><i class="fas fa-user mr-1"></i>{{ task.assigned_to.get_short_name|default:task.assigned_to.username }}</span>{% endif %}
+          {% if task.estimated_time %}<span><i class="fas fa-clock mr-1"></i>{{ task.estimated_time }} min</span>{% endif %}
+          <span>${{ task.estimated_cost|floatformat:2 }}</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="badge
+          {% if task.status == 'terminado' %}bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300
+          {% elif task.status == 'en_proceso' %}bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300
+          {% else %}bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300{% endif %}">
+          {{ task.get_status_display }}
+        </span>
+        {% if task.status != 'terminado' %}
+        <form method="post" action="{% url 'production_complete' task.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn-success py-1.5 px-3 text-xs">
+            <i class="fas fa-check"></i> Terminar
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="card p-12 text-center">
+      <i class="fas fa-fire text-4xl text-gray-300 dark:text-gray-600 mb-3"></i>
+      <p class="text-gray-500 dark:text-gray-400">No hay producción programada para hoy</p>
+      <a href="{% url 'production_create' %}" class="btn-primary mt-4 inline-flex"><i class="fas fa-plus"></i> Programar producción</a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base/base.html" %}
+{% block title %}Compras{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Listas de Compras</h1>
+    <div class="flex gap-2">
+      <a href="{% url 'purchase_list_generate' %}" class="btn-secondary">
+        <i class="fas fa-magic"></i> <span class="hidden sm:inline">Generar Auto</span>
+      </a>
+      <a href="{% url 'purchase_list_create' %}" class="btn-primary">
+        <i class="fas fa-plus"></i> <span class="hidden sm:inline">Nueva Lista</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="space-y-3">
+    {% for pl in lists %}
+    <a href="{% url 'purchase_list_detail' pl.pk %}" class="card p-4 flex items-center gap-4 hover:shadow-md transition group">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
+        {% if pl.status == 'recibido' %}bg-green-100 dark:bg-green-900/30
+        {% elif pl.status == 'pedido' %}bg-brand-100 dark:bg-brand-900/30
+        {% else %}bg-gray-100 dark:bg-gray-700{% endif %}">
+        <i class="fas fa-shopping-cart {% if pl.status == 'recibido' %}text-green-600 dark:text-green-400{% elif pl.status == 'pedido' %}text-brand-600 dark:text-brand-400{% else %}text-gray-500{% endif %}"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h3 class="font-semibold text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition truncate">{{ pl.name }}</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500">{{ pl.items_count }} ítems · {{ pl.pending_items }} pendientes · {{ pl.created_at|date:"d/m/Y" }}</p>
+      </div>
+      <div class="text-right flex-shrink-0">
+        <p class="font-semibold text-gray-900 dark:text-white">${{ pl.total_estimated_cost|floatformat:0 }}</p>
+        <span class="badge
+          {% if pl.status == 'recibido' %}bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300
+          {% elif pl.status == 'pedido' %}bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300
+          {% elif pl.status == 'pendiente' %}bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300
+          {% else %}bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300{% endif %}">
+          {{ pl.get_status_display }}
+        </span>
+      </div>
+    </a>
+    {% empty %}
+    <div class="card p-12 text-center">
+      <i class="fas fa-shopping-cart text-4xl text-gray-300 dark:text-gray-600 mb-3"></i>
+      <p class="text-gray-500 dark:text-gray-400">No hay listas de compras</p>
+      <a href="{% url 'purchase_list_generate' %}" class="btn-primary mt-4 inline-flex"><i class="fas fa-magic"></i> Generar automáticamente</a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

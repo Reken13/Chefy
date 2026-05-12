@@ -1,0 +1,70 @@
+{% extends "base/base.html" %}
+{% block title %}Recetas{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Recetas</h1>
+    <a href="{% url 'recipe_create' %}" class="btn-primary"><i class="fas fa-plus"></i> Nueva Receta</a>
+  </div>
+
+  <form method="get" class="card p-3 flex flex-wrap gap-2">
+    <input type="text" name="q" value="{{ q }}" placeholder="Buscar receta..." class="form-input flex-1 min-w-[180px]">
+    <select name="category" class="form-select max-w-[160px]">
+      <option value="">Todas las categorías</option>
+      {% for val, label in categories %}
+      <option value="{{ val }}" {% if selected_category == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn-primary">
+      <i class="fas fa-search"></i>
+    </button>
+  </form>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for recipe in recipes %}
+    <a href="{% url 'recipe_detail' recipe.pk %}" class="card hover:shadow-lg transition group overflow-hidden">
+      {% if recipe.image %}
+      <img src="{{ recipe.image.url }}" alt="{{ recipe.name }}" class="w-full h-40 object-cover">
+      {% else %}
+      <div class="w-full h-32 bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/20 dark:to-brand-800/20 flex items-center justify-center">
+        <i class="fas fa-book-open text-3xl text-brand-300 dark:text-brand-600"></i>
+      </div>
+      {% endif %}
+      <div class="p-4 space-y-3">
+        <div>
+          <h3 class="font-bold text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition">{{ recipe.name }}</h3>
+          <p class="text-xs text-gray-400 dark:text-gray-500">{{ recipe.get_category_display }}</p>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-500 dark:text-gray-400">
+            <i class="fas fa-clock mr-1"></i>{{ recipe.total_time }} min
+          </span>
+          <span class="text-gray-500 dark:text-gray-400">
+            <i class="fas fa-utensils mr-1"></i>{{ recipe.yield_quantity }} {{ recipe.yield_unit }}
+          </span>
+        </div>
+        <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+          <div>
+            <p class="text-xs text-gray-400 dark:text-gray-500">Costo/porción</p>
+            <p class="font-semibold text-gray-900 dark:text-white">${{ recipe.cost_per_portion|floatformat:2 }}</p>
+          </div>
+          {% if recipe.sale_price > 0 %}
+          <div class="text-right">
+            <p class="text-xs text-gray-400 dark:text-gray-500">Food Cost</p>
+            <p class="font-semibold {% if recipe.food_cost_percentage > 35 %}text-red-500{% elif recipe.food_cost_percentage > 25 %}text-yellow-500{% else %}text-green-600 dark:text-green-400{% endif %}">{{ recipe.food_cost_percentage }}%</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </a>
+    {% empty %}
+    <div class="card col-span-full p-12 text-center">
+      <i class="fas fa-book-open text-4xl text-gray-300 dark:text-gray-600 mb-3"></i>
+      <p class="text-gray-500 dark:text-gray-400">No hay recetas aún</p>
+      <a href="{% url 'recipe_create' %}" class="btn-primary mt-4 inline-flex"><i class="fas fa-plus"></i> Crear primera receta</a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

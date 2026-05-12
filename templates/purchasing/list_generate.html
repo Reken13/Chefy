@@ -1,0 +1,45 @@
+{% extends "base/base.html" %}
+{% block title %}Generar Lista de Compras{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-5">
+  <div class="flex items-center gap-3">
+    <a href="{% url 'purchase_list_index' %}" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i class="fas fa-arrow-left"></i></a>
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Generar Lista Automática</h1>
+  </div>
+
+  {% if low_stock_items %}
+  <div class="card p-5">
+    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Se generará una lista de compras con los siguientes ingredientes que están por debajo del stock mínimo:</p>
+    <div class="space-y-2 mb-5">
+      {% for item in low_stock_items %}
+      <div class="flex items-center justify-between py-2 border-b border-gray-50 dark:border-gray-700 last:border-0">
+        <div>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">{{ item.name }}</span>
+          <span class="text-xs text-gray-400 dark:text-gray-500 ml-2">{{ item.get_location_display }}</span>
+        </div>
+        <div class="text-right">
+          <p class="text-sm text-orange-600 dark:text-orange-400 font-medium">Actual: {{ item.current_stock|floatformat:2 }}{{ item.unit }}</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500">Necesita: ~{{ item.minimum_stock|floatformat:2 }}{{ item.unit }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="date" value="{% now 'd/m/Y' %}">
+      <button type="submit" class="btn-primary w-full justify-center py-3">
+        <i class="fas fa-magic"></i> Generar lista con {{ low_stock_items|length }} ingredientes
+      </button>
+    </form>
+  </div>
+  {% else %}
+  <div class="card p-12 text-center">
+    <i class="fas fa-check-circle text-4xl text-green-400 mb-3"></i>
+    <p class="text-gray-700 dark:text-gray-300 font-medium">Todo el inventario está por encima del mínimo</p>
+    <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">No hay ingredientes con stock bajo en este momento</p>
+    <a href="{% url 'purchase_list_create' %}" class="btn-secondary mt-4 inline-flex">Crear lista manualmente</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-5">
+  <div class="flex items-center gap-3">
+    <a href="{% url 'recipe_list' %}" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i class="fas fa-arrow-left"></i></a>
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ title }}</h1>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-5">
+    {% csrf_token %}
+    <div class="card p-6 space-y-4">
+      <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Información General</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nombre *</label>
+          {{ form.name }}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Categoría</label>
+          {{ form.category }}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Precio de venta</label>
+          {{ form.sale_price }}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Rendimiento</label>
+          {{ form.yield_quantity }}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Unidad de rendimiento</label>
+          {{ form.yield_unit }}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tiempo de prep. (min)</label>
+          {{ form.prep_time }}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tiempo de cocción (min)</label>
+          {{ form.cook_time }}
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Descripción</label>
+          {{ form.description }}
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Foto</label>
+          {{ form.image }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Ingredients formset -->
+    <div class="card p-6 space-y-4">
+      <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Ingredientes</h2>
+      {{ formset.management_form }}
+      <div id="ingredient-formset" class="space-y-2">
+        {% for ingr_form in formset %}
+        <div class="ingredient-row grid grid-cols-12 gap-2 items-center">
+          {% for hidden in ingr_form.hidden_fields %}{{ hidden }}{% endfor %}
+          <div class="col-span-5">{{ ingr_form.ingredient }}</div>
+          <div class="col-span-3">{{ ingr_form.quantity }}</div>
+          <div class="col-span-3">{{ ingr_form.notes }}</div>
+          <div class="col-span-1 flex items-center">
+            {% if ingr_form.DELETE %}
+            <label class="text-red-400 hover:text-red-600 cursor-pointer p-1" title="Eliminar">
+              {{ ingr_form.DELETE }}
+              <i class="fas fa-trash text-sm"></i>
+            </label>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <p class="text-xs text-gray-400 dark:text-gray-500">Deja vacíos los ingredientes que no uses</p>
+    </div>
+
+    <!-- Steps -->
+    <div class="card p-6 space-y-4">
+      <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Pasos de Preparación</h2>
+      <p class="text-xs text-gray-400 dark:text-gray-500">Un paso por línea</p>
+      {{ form.steps }}
+    </div>
+
+    <div class="card p-6 space-y-4">
+      <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Notas del Chef</h2>
+      {{ form.notes }}
+    </div>
+
+    <div class="flex gap-3">
+      <button type="submit" class="btn-primary flex-1 justify-center py-3"><i class="fas fa-save"></i> Guardar Receta</button>
+      <a href="{% url 'recipe_list' %}" class="btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<style>
+  /* Hide checkbox, show icon only */
+  .ingredient-row input[type="checkbox"] { display: none; }
+  .ingredient-row label:has(input:checked) i { color: #ef4444; }
+  .ingredient-row:has(input[type="checkbox"]:checked) { opacity: 0.4; }
+</style>
+{% endblock %}

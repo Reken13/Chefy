@@ -1,0 +1,119 @@
+{% extends "base/base.html" %}
+{% block title %}{{ recipe.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-5">
+  <div class="flex flex-wrap items-center gap-3">
+    <a href="{% url 'recipe_list' %}" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i class="fas fa-arrow-left"></i></a>
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white flex-1">{{ recipe.name }}</h1>
+    <a href="{% url 'recipe_edit' recipe.pk %}" class="btn-secondary"><i class="fas fa-pen"></i> Editar</a>
+  </div>
+
+  <!-- Scale control -->
+  <div class="card p-4 flex flex-wrap items-center gap-4">
+    <div class="flex items-center gap-3">
+      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Escalar receta:</span>
+      <div class="flex items-center gap-2">
+        <a href="?scale=0.5" class="w-8 h-8 btn-secondary py-0 px-0 flex items-center justify-center text-xs">½x</a>
+        <a href="?scale=1" class="w-8 h-8 {% if scale == 1 %}btn-primary{% else %}btn-secondary{% endif %} py-0 px-0 flex items-center justify-center text-xs">1x</a>
+        <a href="?scale=2" class="w-8 h-8 {% if scale == 2 %}btn-primary{% else %}btn-secondary{% endif %} py-0 px-0 flex items-center justify-center text-xs">2x</a>
+        <a href="?scale=3" class="w-8 h-8 {% if scale == 3 %}btn-primary{% else %}btn-secondary{% endif %} py-0 px-0 flex items-center justify-center text-xs">3x</a>
+      </div>
+    </div>
+    <div class="text-sm text-gray-500 dark:text-gray-400">
+      Rendimiento: <span class="font-semibold text-gray-900 dark:text-white">{{ recipe.yield_quantity|floatformat:1 }} {{ recipe.yield_unit }}{% if scale != 1 %} × {{ scale }} = <strong>{% widthratio recipe.yield_quantity 1 scale %}</strong>{% endif %}</span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+    <!-- Ingredients -->
+    <div class="card">
+      <div class="flex items-center gap-2 px-5 pt-5 pb-3 border-b border-gray-100 dark:border-gray-700">
+        <i class="fas fa-list-ul text-brand-500"></i>
+        <h2 class="font-semibold text-gray-900 dark:text-white">Ingredientes</h2>
+      </div>
+      <div class="p-5 space-y-2">
+        {% for ri in ingredients %}
+        <div class="flex items-center justify-between py-2 border-b border-gray-50 dark:border-gray-700/50 last:border-0">
+          <div>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ ri.ingredient.name }}</span>
+            {% if ri.notes %}<span class="text-xs text-gray-400 dark:text-gray-500 ml-2 italic">{{ ri.notes }}</span>{% endif %}
+          </div>
+          <div class="text-right">
+            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              {% if scale == 1 %}{{ ri.quantity|floatformat:3 }}{% else %}{% widthratio ri.quantity 1 scale %}{% endif %} {{ ri.ingredient.unit }}
+            </span>
+            <p class="text-xs text-gray-400 dark:text-gray-500">${{ ri.total_cost|floatformat:2 }}</p>
+          </div>
+        </div>
+        {% endfor %}
+        <div class="pt-2 flex justify-between font-semibold text-sm">
+          <span class="text-gray-700 dark:text-gray-300">Costo total</span>
+          <span class="text-gray-900 dark:text-white">${{ recipe.total_cost|floatformat:2 }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Costs & Info -->
+    <div class="space-y-4">
+      <!-- KPIs -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="card p-4 text-center">
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Costo/porción</p>
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">${{ recipe.cost_per_portion|floatformat:2 }}</p>
+        </div>
+        <div class="card p-4 text-center">
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Precio de venta</p>
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">${{ recipe.sale_price|floatformat:2 }}</p>
+        </div>
+        {% if recipe.sale_price > 0 %}
+        <div class="card p-4 text-center">
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Food Cost</p>
+          <p class="text-2xl font-bold {% if recipe.food_cost_percentage > 35 %}text-red-500{% elif recipe.food_cost_percentage > 25 %}text-yellow-500{% else %}text-green-600 dark:text-green-400{% endif %}">{{ recipe.food_cost_percentage }}%</p>
+        </div>
+        <div class="card p-4 text-center">
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Margen</p>
+          <p class="text-2xl font-bold text-green-600 dark:text-green-400">${{ recipe.margin|floatformat:2 }}</p>
+        </div>
+        {% endif %}
+        <div class="card p-4 text-center">
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Prep</p>
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ recipe.prep_time }}'</p>
+        </div>
+        <div class="card p-4 text-center">
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Cocción</p>
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ recipe.cook_time }}'</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Steps -->
+  {% if steps %}
+  <div class="card">
+    <div class="flex items-center gap-2 px-5 pt-5 pb-3 border-b border-gray-100 dark:border-gray-700">
+      <i class="fas fa-list-ol text-brand-500"></i>
+      <h2 class="font-semibold text-gray-900 dark:text-white">Preparación</h2>
+    </div>
+    <ol class="p-5 space-y-4">
+      {% for step in steps %}
+      <li class="flex gap-4">
+        <div class="w-7 h-7 bg-brand-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">{{ forloop.counter }}</div>
+        <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{{ step }}</p>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+  {% endif %}
+
+  {% if recipe.notes %}
+  <div class="card p-5">
+    <h3 class="font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+      <i class="fas fa-sticky-note text-yellow-500"></i> Notas del Chef
+    </h3>
+    <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ recipe.notes }}</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
