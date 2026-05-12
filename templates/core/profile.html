@@ -51,5 +51,20 @@
       </button>
     </form>
   </div>
+
+  <!-- Setup wizard shortcut -->
+  <div class="ch-card p-4 flex items-center gap-4">
+    <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+         style="background:var(--accent-glow);color:var(--accent)">
+      <i class="fas fa-magic text-sm"></i>
+    </div>
+    <div class="flex-1">
+      <p class="font-semibold text-sm" style="color:var(--text)">Asistente de configuración</p>
+      <p class="text-xs" style="color:var(--text-muted)">Carga plantillas de ingredientes según tu tipo de cocina</p>
+    </div>
+    <a href="{% url 'onboarding' %}" class="ch-btn-secondary text-sm py-1.5 px-3 flex-shrink-0">
+      <i class="fas fa-arrow-right mr-1"></i> Abrir
+    </a>
+  </div>
 </div>
 {% endblock %}

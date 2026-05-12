@@ -8,8 +8,11 @@ from datetime import timedelta
 @login_required
 def dashboard_view(request):
     from inventory.models import Ingredient
-    # Redirect first-time users to onboarding wizard
-    if not request.session.get('onboarding_done') and not Ingredient.objects.exists():
+    # Redirect to onboarding if explicitly requested via ?setup=1
+    if request.GET.get('setup') == '1':
+        return redirect('onboarding')
+    # Redirect first-time users to onboarding wizard (no ingredients at all)
+    if not request.session.get('onboarding_done') and not Ingredient.objects.filter(is_active=True).exists():
         return redirect('onboarding')
     from mise_en_place.models import MiseEnPlaceTask
     from equipment.models import EquipmentIssue
