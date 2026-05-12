@@ -1,0 +1,28 @@
+<div id="purchase-item-{{ item.pk }}"
+     class="flex items-center gap-3 px-5 py-3 {% if item.is_purchased %}opacity-40{% endif %}">
+  <form hx-post="{% url 'mark_item_purchased' item.pk %}"
+        hx-target="#purchase-item-{{ item.pk }}"
+        hx-swap="outerHTML">
+    {% csrf_token %}
+    <button type="submit"
+            class="w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all hover:scale-110
+              {% if item.is_purchased %}border-green-500 text-green-500{% else %}hover:border-accent{% endif %}"
+            style="{% if item.is_purchased %}background:var(--success-bg){% else %}border-color:var(--border){% endif %}">
+      {% if item.is_purchased %}<i class="fas fa-check text-xs"></i>{% endif %}
+    </button>
+  </form>
+  <div class="flex-1 min-w-0">
+    <p class="text-sm font-medium {% if item.is_purchased %}line-through{% endif %}" style="color:var(--text)">
+      {{ item.ingredient.name }}
+    </p>
+    {% if item.notes %}<p class="text-xs" style="color:var(--text-muted)">{{ item.notes }}</p>{% endif %}
+  </div>
+  <div class="text-right">
+    <p class="text-sm font-semibold" style="color:var(--text)">
+      {{ item.quantity_needed|floatformat:3 }} {{ item.ingredient.unit }}
+    </p>
+    {% if item.estimated_cost %}
+    <p class="text-xs" style="color:var(--text-muted)">${{ item.estimated_cost|floatformat:2 }}</p>
+    {% endif %}
+  </div>
+</div>

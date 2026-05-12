@@ -2,62 +2,130 @@
 {% block title %}{{ purchase_list.name }}{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto space-y-6">
+<div class="max-w-3xl mx-auto space-y-6 no-print">
+  <!-- Header -->
   <div class="flex flex-wrap items-center gap-3">
     <a href="{% url 'purchase_list_index' %}" class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
        style="background:var(--surface-2);color:var(--text-muted)">
       <i class="fas fa-arrow-left text-sm"></i>
     </a>
-    <h1 class="text-xl font-bold flex-1" style="color:var(--text)">{{ purchase_list.name }}</h1>
+    <h1 class="text-xl font-bold flex-1 min-w-0 truncate" style="color:var(--text)">{{ purchase_list.name }}</h1>
     <span class="ch-badge-{% if purchase_list.status == 'recibido' %}green{% elif purchase_list.status == 'pedido' %}blue{% else %}yellow{% endif %}">
       {{ purchase_list.get_status_display }}
     </span>
   </div>
 
-  <div class="ch-card p-4 flex flex-wrap gap-5 text-sm">
+  <!-- Stats bar -->
+  <div class="ch-card p-4 flex flex-wrap gap-5">
     <div>
-      <span style="color:var(--text-muted)">Total estimado</span>
-      <p class="font-bold text-xl mt-0.5" style="color:var(--text)">${{ purchase_list.total_estimated_cost|floatformat:0 }}</p>
+      <span class="text-xs" style="color:var(--text-muted)">Total estimado</span>
+      <p class="font-bold text-2xl mt-0.5" style="color:var(--text)">${{ purchase_list.total_estimated_cost|floatformat:0 }}</p>
     </div>
     <div>
-      <span style="color:var(--text-muted)">Ítems</span>
-      <p class="font-bold text-xl mt-0.5" style="color:var(--text)">{{ purchase_list.items_count }}</p>
+      <span class="text-xs" style="color:var(--text-muted)">Ítems</span>
+      <p class="font-bold text-2xl mt-0.5" style="color:var(--text)">{{ purchase_list.items_count }}</p>
     </div>
     <div>
-      <span style="color:var(--text-muted)">Pendientes</span>
-      <p class="font-bold text-xl mt-0.5 text-orange-500">{{ purchase_list.pending_items }}</p>
+      <span class="text-xs" style="color:var(--text-muted)">Pendientes</span>
+      <p class="font-bold text-2xl mt-0.5 text-orange-500">{{ purchase_list.pending_items }}</p>
+    </div>
+    <div class="ml-auto flex items-center gap-2 flex-wrap">
+      <!-- Mark all purchased -->
+      {% if purchase_list.pending_items > 0 %}
+      <form method="post" action="{% url 'mark_all_purchased' purchase_list.pk %}">
+        {% csrf_token %}
+        <button type="submit"
+                onclick="return confirm('¿Marcar todos los ítems como comprados?')"
+                class="ch-btn-secondary text-sm py-2">
+          <i class="fas fa-check-double mr-1.5"></i> Todos comprados
+        </button>
+      </form>
+      {% endif %}
+      <!-- Print -->
+      <button onclick="window.print()" class="ch-btn-secondary text-sm py-2">
+        <i class="fas fa-print mr-1.5"></i> Imprimir
+      </button>
     </div>
   </div>
 
+  <!-- Items by supplier -->
   {% for supplier, items in items_by_supplier.items %}
   <div class="ch-card overflow-hidden">
-    <div class="px-5 py-3 border-b flex items-center gap-2" style="border-color:var(--border);background:var(--surface-2)">
-      <i class="fas fa-truck text-xs" style="color:var(--accent)"></i>
-      <h2 class="font-semibold text-sm" style="color:var(--text)">{{ supplier }}</h2>
+    <div class="px-5 py-3 border-b flex items-center justify-between" style="border-color:var(--border);background:var(--surface-2)">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-truck text-xs" style="color:var(--accent)"></i>
+        <h2 class="font-semibold text-sm" style="color:var(--text)">{{ supplier }}</h2>
+      </div>
+      <span class="text-xs" style="color:var(--text-muted)">{{ items|length }} ítem{{ items|length|pluralize:"s" }}</span>
     </div>
     <div class="divide-y" style="border-color:var(--border)">
       {% for item in items %}
-      <div class="flex items-center gap-3 px-5 py-3 {% if item.is_purchased %}opacity-40{% endif %}">
-        <form method="post" action="{% url 'mark_item_purchased' item.pk %}">
-          {% csrf_token %}
-          <button type="submit" class="w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors
-            {% if item.is_purchased %}border-green-500 text-green-500{% else %}hover:border-accent{% endif %}"
-            style="{% if item.is_purchased %}background:var(--success-bg){% else %}border-color:var(--border){% endif %}">
-            {% if item.is_purchased %}<i class="fas fa-check text-xs"></i>{% endif %}
-          </button>
-        </form>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium {% if item.is_purchased %}line-through{% endif %}" style="color:var(--text)">{{ item.ingredient.name }}</p>
-          {% if item.notes %}<p class="text-xs" style="color:var(--text-muted)">{{ item.notes }}</p>{% endif %}
-        </div>
-        <div class="text-right">
-          <p class="text-sm font-semibold" style="color:var(--text)">{{ item.quantity_needed|floatformat:3 }} {{ item.ingredient.unit }}</p>
-          <p class="text-xs" style="color:var(--text-muted)">${{ item.estimated_cost|floatformat:2 }}</p>
-        </div>
-      </div>
+      {% include "purchasing/_purchase_item_row.html" %}
       {% endfor %}
     </div>
   </div>
   {% endfor %}
 </div>
+
+<!-- ── PRINT VIEW ── -->
+<div class="print-only" style="display:none">
+  <div style="padding:16px 24px; font-family:sans-serif">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;border-bottom:2px solid #000;padding-bottom:12px">
+      <div>
+        <h1 style="margin:0;font-size:20px;font-weight:700">{{ purchase_list.name }}</h1>
+        <p style="margin:4px 0 0;font-size:12px;color:#666">Generada el {{ purchase_list.created_at|date:"d/m/Y H:i" }}</p>
+      </div>
+      <div style="text-align:right">
+        <p style="margin:0;font-size:12px;color:#666">Total estimado</p>
+        <p style="margin:2px 0 0;font-size:22px;font-weight:700">${{ purchase_list.total_estimated_cost|floatformat:0 }}</p>
+      </div>
+    </div>
+
+    {% for supplier, items in items_by_supplier.items %}
+    <div style="margin-bottom:20px">
+      <h2 style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#444;margin:0 0 8px;border-left:3px solid #6366f1;padding-left:8px">
+        {{ supplier }}
+      </h2>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="border-bottom:1px solid #ddd">
+            <th style="text-align:left;padding:6px 8px;font-weight:600;color:#444">Ingrediente</th>
+            <th style="text-align:right;padding:6px 8px;font-weight:600;color:#444">Cantidad</th>
+            <th style="text-align:right;padding:6px 8px;font-weight:600;color:#444">Precio est.</th>
+            <th style="text-align:center;padding:6px 8px;font-weight:600;color:#444">✓</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr style="border-bottom:1px solid #eee">
+            <td style="padding:8px">{{ item.ingredient.name }}</td>
+            <td style="text-align:right;padding:8px;font-weight:600">{{ item.quantity_needed|floatformat:3 }} {{ item.ingredient.unit }}</td>
+            <td style="text-align:right;padding:8px;color:#666">${{ item.estimated_cost|floatformat:2 }}</td>
+            <td style="text-align:center;padding:8px">
+              <span style="display:inline-block;width:16px;height:16px;border:1.5px solid #999;border-radius:3px">
+                {% if item.is_purchased %}✓{% endif %}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endfor %}
+
+    <div style="margin-top:20px;padding-top:12px;border-top:2px solid #000;font-size:11px;color:#666;text-align:center">
+      Chefy — Kitchen OS &nbsp;·&nbsp; {{ purchase_list.items_count }} ítems &nbsp;·&nbsp; Impreso el {% now "d/m/Y H:i" %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+@media print {
+  .no-print, #sidebar, .bottom-nav, .fab-wrap, .toast-container, #tour-overlay { display: none !important; }
+  .print-only { display: block !important; }
+  body, #main-content { padding: 0 !important; margin: 0 !important; background: white !important; }
+}
+</style>
 {% endblock %}

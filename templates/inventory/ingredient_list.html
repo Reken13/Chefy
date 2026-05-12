@@ -116,78 +116,7 @@
   {% if ingredients %}
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
     {% for item in ingredients %}
-    <div class="ch-card group relative overflow-hidden">
-      <!-- Status strip -->
-      <div class="absolute top-0 left-0 right-0 h-0.5
-        {% if item.is_expired %}bg-red-500
-        {% elif item.is_low_stock %}bg-orange-400
-        {% elif item.is_expiring_soon %}bg-yellow-400
-        {% else %}bg-green-500{% endif %}">
-      </div>
-      <div class="p-4 space-y-3">
-        <div class="flex items-start justify-between gap-2">
-          <div class="min-w-0">
-            <h3 class="font-semibold text-sm truncate" style="color:var(--text)">{{ item.name }}</h3>
-            <p class="text-xs mt-0.5 truncate" style="color:var(--text-muted)">
-              {{ item.get_location_display }}{% if item.category %} &middot; {{ item.category.name }}{% endif %}
-            </p>
-          </div>
-          <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-            <a href="{% url 'adjust_stock' item.pk %}"
-               class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-               style="background:var(--surface-2);color:var(--accent)"
-               title="Ajustar stock">
-              <i class="fas fa-plus-minus text-xs"></i>
-            </a>
-            <a href="{% url 'ingredient_edit' item.pk %}"
-               class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-               style="background:var(--surface-2);color:var(--text-muted)"
-               title="Editar">
-              <i class="fas fa-pen text-xs"></i>
-            </a>
-          </div>
-        </div>
-
-        <!-- Stock -->
-        <div>
-          <div class="flex justify-between items-baseline mb-1.5">
-            <span class="text-xl font-bold
-              {% if item.is_expired %}text-red-500
-              {% elif item.is_low_stock %}text-orange-500
-              {% else %}{% endif %}"
-              {% if not item.is_expired and not item.is_low_stock %}style="color:var(--text)"{% endif %}>
-              {{ item.current_stock|floatformat:2 }}
-            </span>
-            <span class="text-xs" style="color:var(--text-muted)">{{ item.unit }}</span>
-          </div>
-          {% if item.minimum_stock > 0 %}
-          <div class="w-full h-1.5 rounded-full overflow-hidden" style="background:var(--border)">
-            <div class="h-full rounded-full transition-all"
-                 style="width:{{ item.stock_percentage }}%; background:{% if item.is_low_stock %}var(--warning){% else %}var(--success){% endif %}"></div>
-          </div>
-          <div class="flex justify-between mt-1">
-            <span class="text-xs" style="color:var(--text-muted)">mín {{ item.minimum_stock }}{{ item.unit }}</span>
-            <span class="text-xs font-medium {% if item.is_low_stock %}text-orange-500{% else %}text-green-500{% endif %}">{{ item.stock_percentage }}%</span>
-          </div>
-          {% endif %}
-        </div>
-
-        <!-- Badges -->
-        <div class="flex flex-wrap gap-1">
-          {% if item.is_expired %}
-          <span class="ch-badge-red text-xs"><i class="fas fa-exclamation-triangle mr-1"></i>Vencido</span>
-          {% elif item.is_expiring_soon %}
-          <span class="ch-badge-yellow text-xs"><i class="fas fa-clock mr-1"></i>Vence {{ item.expiry_date|date:"d/m" }}</span>
-          {% endif %}
-          {% if item.is_low_stock %}
-          <span class="ch-badge-orange text-xs"><i class="fas fa-arrow-down mr-1"></i>Stock bajo</span>
-          {% endif %}
-          {% if item.cost_per_unit > 0 %}
-          <span class="ch-badge-gray text-xs">${{ item.cost_per_unit }}/{{ item.unit }}</span>
-          {% endif %}
-        </div>
-      </div>
-    </div>
+    {% include "inventory/_ingredient_card.html" %}
     {% endfor %}
   </div>
   {% else %}

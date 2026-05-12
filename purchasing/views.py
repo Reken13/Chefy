@@ -68,5 +68,24 @@ def mark_item_purchased(request, pk):
     item = get_object_or_404(PurchaseItem, pk=pk)
     if request.method == 'POST':
         item.mark_purchased()
+        if request.headers.get('HX-Request'):
+            from django.template.loader import render_to_string
+            return HttpResponse(render_to_string(
+                'purchasing/_purchase_item_row.html',
+                {'item': item},
+                request=request
+            ))
         messages.success(request, f'"{item.ingredient.name}" marcado como comprado.')
     return redirect('purchase_list_detail', pk=item.purchase_list.pk)
+
+
+@login_required
+def mark_all_purchased(request, pk):
+    purchase_list = get_object_or_404(PurchaseList, pk=pk)
+    if request.method == 'POST':
+        count = 0
+        for item in purchase_list.items.filter(is_purchased=False):
+            item.mark_purchased()
+            count += 1
+        messages.success(request, f'{count} ítems marcados como comprados.')
+    return redirect('purchase_list_detail', pk=pk)

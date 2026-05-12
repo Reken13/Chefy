@@ -2,7 +2,7 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="max-w-lg mx-auto space-y-5">
+<div class="max-w-lg mx-auto space-y-5" x-data="wasteForm()">
   <div class="flex items-center gap-3">
     <a href="{% url 'waste_list' %}" class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
        style="background:var(--surface-2);color:var(--text-muted)">
@@ -10,38 +10,99 @@
     </a>
     <h1 class="text-xl font-bold" style="color:var(--text)">{{ title }}</h1>
   </div>
+
   <div class="ch-card p-6">
-    <form method="post" class="space-y-4">
+    <form method="post" class="space-y-5">
       {% csrf_token %}
+
+      <!-- Ingrediente -->
       <div>
-        <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Ingrediente *</label>
+        <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">
+          <i class="fas fa-box mr-1.5 opacity-60"></i>¿Qué tiraste? *
+        </label>
         {{ form.ingredient }}
       </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Cantidad *</label>
-          {{ form.quantity }}
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Motivo *</label>
-          {{ form.reason }}
-        </div>
-        <div class="col-span-2">
-          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Fecha</label>
-          {{ form.date }}
-        </div>
-      </div>
+
+      <!-- Cantidad -->
       <div>
-        <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Descripción adicional</label>
+        <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">
+          <i class="fas fa-weight mr-1.5 opacity-60"></i>¿Cuánto? *
+        </label>
+        {{ form.quantity }}
+      </div>
+
+      <!-- Motivo — Visual chips -->
+      <div>
+        <label class="block text-sm font-medium mb-2.5" style="color:var(--text)">
+          <i class="fas fa-question-circle mr-1.5 opacity-60"></i>¿Por qué? *
+        </label>
+        <input type="hidden" name="reason" :value="reason" required>
+        <div class="grid grid-cols-2 gap-2">
+          <template x-for="chip in reasons" :key="chip.val">
+            <button type="button"
+                    @click="reason = chip.val"
+                    class="flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all"
+                    :style="reason === chip.val
+                      ? 'border-color:'+chip.color+';background:'+chip.bg
+                      : 'border-color:var(--border);background:var(--surface-2)'">
+              <span class="text-xl flex-shrink-0" x-text="chip.emoji"></span>
+              <div class="min-w-0">
+                <p class="text-xs font-semibold truncate"
+                   :style="reason === chip.val ? 'color:'+chip.color : 'color:var(--text)'"
+                   x-text="chip.label"></p>
+              </div>
+              <i x-show="reason === chip.val" class="fas fa-check-circle ml-auto flex-shrink-0 text-sm"
+                 :style="'color:'+chip.color"></i>
+            </button>
+          </template>
+        </div>
+        <p x-show="!reason" class="text-xs mt-1.5" style="color:var(--text-muted)">Selecciona el motivo del desperdicio</p>
+      </div>
+
+      <!-- Fecha -->
+      <div>
+        <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">
+          <i class="fas fa-calendar mr-1.5 opacity-60"></i>Fecha
+        </label>
+        {{ form.date }}
+      </div>
+
+      <!-- Descripción -->
+      <div>
+        <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">
+          <i class="fas fa-sticky-note mr-1.5 opacity-60"></i>Notas adicionales
+        </label>
         {{ form.description }}
       </div>
-      <div class="flex gap-3 pt-2">
-        <button type="submit" class="ch-btn-danger flex-1 justify-center py-2.5">
+
+      <div class="flex gap-3 pt-1">
+        <button type="submit" :disabled="!reason"
+                class="ch-btn-danger flex-1 justify-center py-3 text-sm font-semibold"
+                :class="!reason ? 'opacity-50 cursor-not-allowed' : ''">
           <i class="fas fa-trash-alt mr-1.5"></i> Registrar Desperdicio
         </button>
-        <a href="{% url 'waste_list' %}" class="ch-btn-secondary py-2.5 px-5">Cancelar</a>
+        <a href="{% url 'waste_list' %}" class="ch-btn-secondary py-3 px-5">Cancelar</a>
       </div>
     </form>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function wasteForm() {
+  return {
+    reason: '{{ form.reason.value|default:"" }}',
+    reasons: [
+      { val: 'vencido',        label: 'Vencido',          emoji: '🗓️', color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
+      { val: 'dañado',         label: 'Dañado',           emoji: '☠️', color: '#f97316', bg: 'rgba(249,115,22,0.08)' },
+      { val: 'sobreproduccion',label: 'Sobreproducción',  emoji: '📦', color: '#a855f7', bg: 'rgba(168,85,247,0.08)' },
+      { val: 'error_coccion',  label: 'Error de cocción', emoji: '🔥', color: '#f97316', bg: 'rgba(249,115,22,0.08)' },
+      { val: 'derrame',        label: 'Derrame/Accidente', emoji: '💧', color: '#3b82f6', bg: 'rgba(59,130,246,0.08)' },
+      { val: 'merma',          label: 'Merma de limpieza',emoji: '✂️', color: '#6b7280', bg: 'rgba(107,114,128,0.08)' },
+      { val: 'otro',           label: 'Otro motivo',      emoji: '❓', color: '#6b7280', bg: 'rgba(107,114,128,0.08)' },
+    ],
+  };
+}
+</script>
 {% endblock %}

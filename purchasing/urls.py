@@ -7,4 +7,5 @@ urlpatterns = [
     path('generar/', views.purchase_list_generate, name='purchase_list_generate'),
     path('<int:pk>/', views.purchase_list_detail, name='purchase_list_detail'),
     path('item/<int:pk>/comprado/', views.mark_item_purchased, name='mark_item_purchased'),
+    path('<int:pk>/todos-comprados/', views.mark_all_purchased, name='mark_all_purchased'),
 ]

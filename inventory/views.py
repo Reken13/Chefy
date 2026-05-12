@@ -119,6 +119,36 @@ def adjust_stock(request, pk):
     return render(request, 'inventory/adjust_stock.html', {'form': form, 'ingredient': ingredient})
 
 @login_required
+@require_POST
+def quick_stock_adjust(request, pk):
+    """HTMX quick +/- stock adjustment — returns refreshed ingredient card."""
+    ingredient = get_object_or_404(Ingredient, pk=pk)
+    try:
+        delta = float(request.POST.get('delta', 0))
+    except (ValueError, TypeError):
+        delta = 0
+
+    if delta != 0:
+        previous = ingredient.current_stock
+        movement_type = (InventoryMovement.MovementType.ENTRY if delta > 0
+                         else InventoryMovement.MovementType.EXIT)
+        ingredient.current_stock = max(0, float(ingredient.current_stock) + delta)
+        ingredient.save(update_fields=['current_stock'])
+        InventoryMovement.objects.create(
+            ingredient=ingredient,
+            movement_type=movement_type,
+            quantity=abs(delta),
+            previous_stock=previous,
+            new_stock=ingredient.current_stock,
+            cost_per_unit=ingredient.cost_per_unit,
+            reason='Ajuste rápido',
+            created_by=request.user,
+        )
+
+    return render(request, 'inventory/_ingredient_card.html', {'item': ingredient})
+
+
+@login_required
 def quick_add_view(request):
     """Parse natural language input and create ingredient."""
     if request.method == 'POST':
