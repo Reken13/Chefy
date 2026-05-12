@@ -2,67 +2,69 @@
 {% block title %}Recetas{% endblock %}
 
 {% block content %}
-<div class="space-y-5">
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Recetas</h1>
-    <a href="{% url 'recipe_create' %}" class="btn-primary"><i class="fas fa-plus"></i> Nueva Receta</a>
+<div class="space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold" style="color:var(--text)">Recetas</h1>
+      <p class="text-sm mt-0.5" style="color:var(--text-muted)">{{ recipes|length }} receta{{ recipes|length|pluralize:"s" }}</p>
+    </div>
+    <a href="{% url 'recipe_create' %}" class="ch-btn-primary">
+      <i class="fas fa-plus mr-1.5"></i> Nueva Receta
+    </a>
   </div>
 
-  <form method="get" class="card p-3 flex flex-wrap gap-2">
-    <input type="text" name="q" value="{{ q }}" placeholder="Buscar receta..." class="form-input flex-1 min-w-[180px]">
-    <select name="category" class="form-select max-w-[160px]">
+  <form method="get" class="ch-card p-3 flex flex-wrap gap-2">
+    <input type="text" name="q" value="{{ q }}" placeholder="Buscar receta..." class="ch-input text-sm flex-1 min-w-[180px]">
+    <select name="category" class="ch-input text-sm max-w-[180px]">
       <option value="">Todas las categorías</option>
       {% for val, label in categories %}
       <option value="{{ val }}" {% if selected_category == val %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
-    <button type="submit" class="btn-primary">
-      <i class="fas fa-search"></i>
-    </button>
+    <button type="submit" class="ch-btn-primary py-2 px-4"><i class="fas fa-search"></i></button>
   </form>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
     {% for recipe in recipes %}
-    <a href="{% url 'recipe_detail' recipe.pk %}" class="card hover:shadow-lg transition group overflow-hidden">
+    <a href="{% url 'recipe_detail' recipe.pk %}" class="ch-card overflow-hidden group block hover:scale-[1.01] transition-transform">
       {% if recipe.image %}
       <img src="{{ recipe.image.url }}" alt="{{ recipe.name }}" class="w-full h-40 object-cover">
       {% else %}
-      <div class="w-full h-32 bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/20 dark:to-brand-800/20 flex items-center justify-center">
-        <i class="fas fa-book-open text-3xl text-brand-300 dark:text-brand-600"></i>
+      <div class="w-full h-32 flex items-center justify-center" style="background:var(--surface-2)">
+        <i class="fas fa-book-open text-3xl opacity-20" style="color:var(--accent)"></i>
       </div>
       {% endif %}
       <div class="p-4 space-y-3">
         <div>
-          <h3 class="font-bold text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition">{{ recipe.name }}</h3>
-          <p class="text-xs text-gray-400 dark:text-gray-500">{{ recipe.get_category_display }}</p>
+          <h3 class="font-bold transition-colors" style="color:var(--text)">{{ recipe.name }}</h3>
+          <p class="text-xs mt-0.5" style="color:var(--text-muted)">{{ recipe.get_category_display }}</p>
         </div>
-        <div class="flex items-center justify-between text-sm">
-          <span class="text-gray-500 dark:text-gray-400">
-            <i class="fas fa-clock mr-1"></i>{{ recipe.total_time }} min
-          </span>
-          <span class="text-gray-500 dark:text-gray-400">
-            <i class="fas fa-utensils mr-1"></i>{{ recipe.yield_quantity }} {{ recipe.yield_unit }}
-          </span>
+        <div class="flex items-center justify-between text-sm" style="color:var(--text-muted)">
+          <span><i class="fas fa-clock mr-1 opacity-60"></i>{{ recipe.total_time }} min</span>
+          <span><i class="fas fa-utensils mr-1 opacity-60"></i>{{ recipe.yield_quantity }} {{ recipe.yield_unit }}</span>
         </div>
-        <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+        <div class="flex items-center justify-between pt-3 border-t" style="border-color:var(--border)">
           <div>
-            <p class="text-xs text-gray-400 dark:text-gray-500">Costo/porción</p>
-            <p class="font-semibold text-gray-900 dark:text-white">${{ recipe.cost_per_portion|floatformat:2 }}</p>
+            <p class="text-xs" style="color:var(--text-muted)">Costo/porción</p>
+            <p class="font-semibold text-sm" style="color:var(--text)">${{ recipe.cost_per_portion|floatformat:2 }}</p>
           </div>
           {% if recipe.sale_price > 0 %}
           <div class="text-right">
-            <p class="text-xs text-gray-400 dark:text-gray-500">Food Cost</p>
-            <p class="font-semibold {% if recipe.food_cost_percentage > 35 %}text-red-500{% elif recipe.food_cost_percentage > 25 %}text-yellow-500{% else %}text-green-600 dark:text-green-400{% endif %}">{{ recipe.food_cost_percentage }}%</p>
+            <p class="text-xs" style="color:var(--text-muted)">Food Cost</p>
+            <p class="font-bold text-sm {% if recipe.food_cost_percentage > 35 %}text-red-500{% elif recipe.food_cost_percentage > 25 %}text-yellow-500{% else %}text-green-500{% endif %}">
+              {{ recipe.food_cost_percentage }}%
+            </p>
           </div>
           {% endif %}
         </div>
       </div>
     </a>
     {% empty %}
-    <div class="card col-span-full p-12 text-center">
-      <i class="fas fa-book-open text-4xl text-gray-300 dark:text-gray-600 mb-3"></i>
-      <p class="text-gray-500 dark:text-gray-400">No hay recetas aún</p>
-      <a href="{% url 'recipe_create' %}" class="btn-primary mt-4 inline-flex"><i class="fas fa-plus"></i> Crear primera receta</a>
+    <div class="ch-card col-span-full p-16 text-center">
+      <i class="fas fa-book-open text-4xl mb-4 block opacity-30" style="color:var(--text-muted)"></i>
+      <p class="font-medium mb-1" style="color:var(--text)">No hay recetas aún</p>
+      <p class="text-sm mb-6" style="color:var(--text-muted)">Crea tu primer receta con costos y porciones</p>
+      <a href="{% url 'recipe_create' %}" class="ch-btn-primary"><i class="fas fa-plus mr-1.5"></i> Crear primera receta</a>
     </div>
     {% endfor %}
   </div>

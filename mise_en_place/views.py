@@ -67,9 +67,20 @@ def task_update_status(request, pk):
             task.status = new_status
             if new_status == 'terminado':
                 task.completed_at = timezone.now()
+            else:
+                task.completed_at = None
             task.save(update_fields=['status', 'completed_at'])
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': True, 'status': new_status})
+            if request.htmx:
+                next_status_map = {'pendiente': 'en_proceso', 'en_proceso': 'terminado'}
+                next_status = next_status_map.get(new_status, '')
+                next_label_map = {'en_proceso': 'Terminar', 'pendiente': 'Retomar'}
+                next_icon_map = {'en_proceso': 'fa-check', 'pendiente': 'fa-undo'}
+                return render(request, 'mise_en_place/_task_card.html', {
+                    'task': task,
+                    'next_status': next_status,
+                    'next_label': next_label_map.get(next_status, ''),
+                    'next_icon': next_icon_map.get(next_status, ''),
+                })
             messages.success(request, 'Estado actualizado.')
     return redirect('mise_en_place_kanban')
 

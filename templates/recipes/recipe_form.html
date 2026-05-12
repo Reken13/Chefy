@@ -4,68 +4,72 @@
 {% block content %}
 <div class="max-w-4xl mx-auto space-y-5">
   <div class="flex items-center gap-3">
-    <a href="{% url 'recipe_list' %}" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i class="fas fa-arrow-left"></i></a>
-    <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ title }}</h1>
+    <a href="{% url 'recipe_list' %}" class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+       style="background:var(--surface-2);color:var(--text-muted)">
+      <i class="fas fa-arrow-left text-sm"></i>
+    </a>
+    <h1 class="text-xl font-bold" style="color:var(--text)">{{ title }}</h1>
   </div>
 
   <form method="post" enctype="multipart/form-data" class="space-y-5">
     {% csrf_token %}
-    <div class="card p-6 space-y-4">
-      <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Información General</h2>
+
+    <div class="ch-card p-6 space-y-4">
+      <h2 class="font-semibold text-xs uppercase tracking-widest mb-4" style="color:var(--text-muted)">Información General</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="sm:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nombre *</label>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Nombre *</label>
           {{ form.name }}
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Categoría</label>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Categoría</label>
           {{ form.category }}
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Precio de venta</label>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Precio de venta</label>
           {{ form.sale_price }}
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Rendimiento</label>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Rendimiento</label>
           {{ form.yield_quantity }}
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Unidad de rendimiento</label>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Unidad de rendimiento</label>
           {{ form.yield_unit }}
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tiempo de prep. (min)</label>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Prep. (min)</label>
           {{ form.prep_time }}
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tiempo de cocción (min)</label>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Cocción (min)</label>
           {{ form.cook_time }}
         </div>
         <div class="sm:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Descripción</label>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Descripción</label>
           {{ form.description }}
         </div>
         <div class="sm:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Foto</label>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Foto</label>
           {{ form.image }}
         </div>
       </div>
     </div>
 
     <!-- Ingredients formset -->
-    <div class="card p-6 space-y-4">
-      <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Ingredientes</h2>
+    <div class="ch-card p-6 space-y-3">
+      <h2 class="font-semibold text-xs uppercase tracking-widest mb-4" style="color:var(--text-muted)">Ingredientes</h2>
       {{ formset.management_form }}
       <div id="ingredient-formset" class="space-y-2">
         {% for ingr_form in formset %}
-        <div class="ingredient-row grid grid-cols-12 gap-2 items-center">
+        <div class="ingredient-row grid grid-cols-12 gap-2 items-center p-2 rounded-lg transition-opacity" style="background:var(--surface-2)">
           {% for hidden in ingr_form.hidden_fields %}{{ hidden }}{% endfor %}
           <div class="col-span-5">{{ ingr_form.ingredient }}</div>
           <div class="col-span-3">{{ ingr_form.quantity }}</div>
           <div class="col-span-3">{{ ingr_form.notes }}</div>
-          <div class="col-span-1 flex items-center">
+          <div class="col-span-1 flex items-center justify-center">
             {% if ingr_form.DELETE %}
-            <label class="text-red-400 hover:text-red-600 cursor-pointer p-1" title="Eliminar">
+            <label class="cursor-pointer p-1.5 rounded-lg transition-colors hover:bg-red-100 dark:hover:bg-red-900/30 text-red-400 hover:text-red-600" title="Eliminar">
               {{ ingr_form.DELETE }}
               <i class="fas fa-trash text-sm"></i>
             </label>
@@ -74,32 +78,32 @@
         </div>
         {% endfor %}
       </div>
-      <p class="text-xs text-gray-400 dark:text-gray-500">Deja vacíos los ingredientes que no uses</p>
+      <p class="text-xs" style="color:var(--text-muted)">Deja vacíos los ingredientes que no uses</p>
     </div>
 
-    <!-- Steps -->
-    <div class="card p-6 space-y-4">
-      <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Pasos de Preparación</h2>
-      <p class="text-xs text-gray-400 dark:text-gray-500">Un paso por línea</p>
+    <div class="ch-card p-6 space-y-3">
+      <h2 class="font-semibold text-xs uppercase tracking-widest mb-3" style="color:var(--text-muted)">Pasos de Preparación</h2>
+      <p class="text-xs mb-2" style="color:var(--text-muted)">Un paso por línea</p>
       {{ form.steps }}
     </div>
 
-    <div class="card p-6 space-y-4">
-      <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Notas del Chef</h2>
+    <div class="ch-card p-6 space-y-3">
+      <h2 class="font-semibold text-xs uppercase tracking-widest mb-3" style="color:var(--text-muted)">Notas del Chef</h2>
       {{ form.notes }}
     </div>
 
     <div class="flex gap-3">
-      <button type="submit" class="btn-primary flex-1 justify-center py-3"><i class="fas fa-save"></i> Guardar Receta</button>
-      <a href="{% url 'recipe_list' %}" class="btn-secondary">Cancelar</a>
+      <button type="submit" class="ch-btn-primary flex-1 justify-center py-3 text-sm">
+        <i class="fas fa-save mr-1.5"></i> Guardar Receta
+      </button>
+      <a href="{% url 'recipe_list' %}" class="ch-btn-secondary py-3 px-5 text-sm">Cancelar</a>
     </div>
   </form>
 </div>
 
 <style>
-  /* Hide checkbox, show icon only */
   .ingredient-row input[type="checkbox"] { display: none; }
   .ingredient-row label:has(input:checked) i { color: #ef4444; }
-  .ingredient-row:has(input[type="checkbox"]:checked) { opacity: 0.4; }
+  .ingredient-row:has(input[type="checkbox"]:checked) { opacity: 0.35; }
 </style>
 {% endblock %}

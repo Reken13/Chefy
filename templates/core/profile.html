@@ -3,17 +3,18 @@
 
 {% block content %}
 <div class="max-w-lg mx-auto space-y-5">
-  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Mi Perfil</h1>
+  <h1 class="text-2xl font-bold" style="color:var(--text)">Mi Perfil</h1>
 
-  <div class="card p-6">
-    <div class="flex items-center gap-4 mb-6 pb-5 border-b border-gray-100 dark:border-gray-700">
-      <div class="w-16 h-16 bg-gradient-to-br from-brand-500 to-brand-700 rounded-2xl flex items-center justify-center text-white text-xl font-bold">
+  <div class="ch-card p-6">
+    <div class="flex items-center gap-4 mb-6 pb-5 border-b" style="border-color:var(--border)">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-xl font-bold flex-shrink-0"
+           style="background:linear-gradient(135deg,var(--accent),var(--accent-hover))">
         {{ request.user.first_name|first|default:request.user.username|first|upper }}
       </div>
       <div>
-        <p class="text-xl font-bold text-gray-900 dark:text-white">{{ request.user.get_full_name|default:request.user.username }}</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400">{{ request.user.get_role_display }}</p>
-        <p class="text-sm text-brand-500">{{ request.user.restaurant_name }}</p>
+        <p class="text-xl font-bold" style="color:var(--text)">{{ request.user.get_full_name|default:request.user.username }}</p>
+        <p class="text-sm" style="color:var(--text-muted)">{{ request.user.get_role_display }}</p>
+        <p class="text-sm mt-0.5" style="color:var(--accent)">{{ request.user.restaurant_name }}</p>
       </div>
     </div>
 
@@ -21,31 +22,33 @@
       {% csrf_token %}
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nombre</label>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Nombre</label>
           {{ form.first_name }}
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Apellido</label>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Apellido</label>
           {{ form.last_name }}
         </div>
         <div class="col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Email</label>
           {{ form.email }}
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Teléfono</label>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Teléfono</label>
           {{ form.phone }}
         </div>
         <div class="col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nombre del restaurante</label>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Nombre del restaurante</label>
           {{ form.restaurant_name }}
         </div>
       </div>
-      <div class="flex items-center gap-3 py-1">
+      <div class="flex items-center gap-3 py-2">
         {{ form.dark_mode }}
-        <label class="text-sm text-gray-700 dark:text-gray-300">Modo Oscuro</label>
+        <label class="text-sm cursor-pointer" style="color:var(--text)">Modo Oscuro</label>
       </div>
-      <button type="submit" class="btn-primary w-full justify-center"><i class="fas fa-save"></i> Guardar cambios</button>
+      <button type="submit" class="ch-btn-primary w-full justify-center py-2.5">
+        <i class="fas fa-save mr-1.5"></i> Guardar cambios
+      </button>
     </form>
   </div>
 </div>

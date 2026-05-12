@@ -4,31 +4,36 @@
 {% block content %}
 <div class="max-w-lg mx-auto space-y-5">
   <div class="flex items-center gap-3">
-    <a href="{% url 'purchase_list_index' %}" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i class="fas fa-arrow-left"></i></a>
-    <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ title }}</h1>
+    <a href="{% url 'purchase_list_index' %}" class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+       style="background:var(--surface-2);color:var(--text-muted)">
+      <i class="fas fa-arrow-left text-sm"></i>
+    </a>
+    <h1 class="text-xl font-bold" style="color:var(--text)">{{ title }}</h1>
   </div>
-  <div class="card p-6">
+  <div class="ch-card p-6">
     <form method="post" class="space-y-4">
       {% csrf_token %}
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nombre *</label>
+        <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Nombre *</label>
         {{ form.name }}
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Estado</label>
+        <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Estado</label>
         {{ form.status }}
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Entrega esperada</label>
+        <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Entrega esperada</label>
         {{ form.expected_delivery }}
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Notas</label>
+        <label class="block text-sm font-medium mb-1.5" style="color:var(--text)">Notas</label>
         {{ form.notes }}
       </div>
       <div class="flex gap-3 pt-2">
-        <button type="submit" class="btn-primary flex-1 justify-center"><i class="fas fa-save"></i> Guardar</button>
-        <a href="{% url 'purchase_list_index' %}" class="btn-secondary">Cancelar</a>
+        <button type="submit" class="ch-btn-primary flex-1 justify-center py-2.5">
+          <i class="fas fa-save mr-1.5"></i> Guardar
+        </button>
+        <a href="{% url 'purchase_list_index' %}" class="ch-btn-secondary py-2.5 px-5">Cancelar</a>
       </div>
     </form>
   </div>

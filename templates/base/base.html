@@ -1,225 +1,545 @@
 <!DOCTYPE html>
-<html lang="es" class="{% if request.user.is_authenticated and request.user.dark_mode %}dark{% endif %}">
+<html lang="es" class="h-full {% if request.user.is_authenticated and request.user.dark_mode %}dark{% endif %}">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>{% block title %}Chefy{% endblock %} — Kitchen OS</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe',
-              300: '#a5b4fc', 400: '#818cf8', 500: '#6366f1',
-              600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81',
-            }
-          },
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
-        }
-      }
-    }
-  </script>
+
+  <!-- Inter Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    * { -webkit-tap-highlight-color: transparent; }
-    .form-input { @apply w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition; }
-    .form-select { @apply w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition; }
-    .form-textarea { @apply w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition resize-none; }
-    .btn-primary { @apply inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2.5 rounded-lg text-sm transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2; }
-    .btn-secondary { @apply inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium px-4 py-2.5 rounded-lg text-sm transition; }
-    .btn-danger { @apply inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2.5 rounded-lg text-sm transition; }
-    .btn-success { @apply inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2.5 rounded-lg text-sm transition; }
-    .card { @apply bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm; }
-    .badge { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium; }
-    .nav-link { @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150; }
-    .nav-link-active { @apply bg-brand-600 text-white shadow-sm; }
-    .nav-link-inactive { @apply text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white; }
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 2px; }
-    .dark ::-webkit-scrollbar-thumb { background: #4338ca; }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- TailwindCSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { 400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca' } }, fontFamily: { sans: ['Inter','system-ui','sans-serif'] } } } }</script>
+
+  <!-- Chefy Design System -->
+  <link rel="stylesheet" href="/static/css/chefy.css">
+
+  <!-- HTMX -->
+  <script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js"></script>
+
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
+
   {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white font-sans antialiased min-h-screen">
+<body
+  class="h-full antialiased"
+  hx-boost="true"
+  x-data="chefyApp()"
+  x-init="init()"
+  @keydown.ctrl.k.window.prevent="openCommand()"
+  @keydown.meta.k.window.prevent="openCommand()"
+>
 
 {% if user.is_authenticated %}
-<!-- Mobile top bar -->
-<div class="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
-  <button onclick="toggleSidebar()" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white p-1">
-    <i class="fas fa-bars text-xl"></i>
-  </button>
-  <span class="font-bold text-brand-600 dark:text-brand-400 text-lg">🍴 Chefy</span>
-  <a href="{% url 'notification_list' %}" class="relative text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white p-1">
-    <i class="fas fa-bell text-xl"></i>
-    {% if unread_notifications_count > 0 %}
-    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">{{ unread_notifications_count }}</span>
-    {% endif %}
-  </a>
-</div>
 
-<!-- Sidebar overlay (mobile) -->
-<div id="sidebar-overlay" onclick="toggleSidebar()" class="lg:hidden fixed inset-0 z-30 bg-black bg-opacity-50 hidden"></div>
-
-<!-- Sidebar -->
-<aside id="sidebar" class="fixed top-0 left-0 bottom-0 z-40 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside
+  id="sidebar"
+  class="sidebar"
+  :class="{ 'collapsed': sidebarCollapsed, '-translate-x-full lg:translate-x-0': !sidebarMobileOpen, 'translate-x-0': sidebarMobileOpen }"
+  style="transform: translateX(-100%)"
+  x-bind:style="sidebarMobileOpen || window.innerWidth >= 1024 ? 'transform:translateX(0)' : 'transform:translateX(-100%)'"
+>
   <!-- Logo -->
-  <div class="px-4 py-5 border-b border-gray-100 dark:border-gray-700">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl flex items-center justify-center text-white font-bold shadow-sm">
-        <i class="fas fa-utensils text-sm"></i>
-      </div>
-      <div>
-        <div class="font-bold text-gray-900 dark:text-white text-base leading-tight">Chefy</div>
-        <div class="text-xs text-gray-400 dark:text-gray-500 truncate max-w-[120px]">{{ request.user.restaurant_name }}</div>
-      </div>
+  <div class="flex items-center gap-3 px-4 py-5 border-b" style="border-color:var(--border); min-height:64px; flex-shrink:0;">
+    <div class="w-8 h-8 flex-shrink-0 rounded-lg flex items-center justify-center text-white text-sm font-bold"
+         style="background:linear-gradient(135deg,#6366f1,#818cf8);">
+      <i class="fas fa-utensils text-xs"></i>
+    </div>
+    <div class="sidebar-label overflow-hidden">
+      <div class="font-bold text-sm" style="color:var(--text)">Chefy</div>
+      <div class="text-xs truncate max-w-[120px]" style="color:var(--text-3)">{{ request.user.restaurant_name }}</div>
     </div>
   </div>
 
   <!-- Nav -->
-  <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-    <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}nav-link-active{% else %}nav-link-inactive{% endif %}">
-      <i class="fas fa-th-large w-5 text-center"></i>
-      <span>Dashboard</span>
+  <nav class="flex-1 overflow-y-auto py-3 space-y-0.5">
+
+    <!-- Main -->
+    <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" data-label="Dashboard">
+      <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+      <span class="sidebar-label">Dashboard</span>
     </a>
 
-    <div class="pt-3 pb-1 px-3">
-      <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Cocina</p>
-    </div>
+    <div class="sidebar-section-title">Cocina</div>
 
-    <a href="{% url 'mise_en_place_kanban' %}" class="nav-link {% if 'mise' in request.resolver_match.url_name|default:'' %}nav-link-active{% else %}nav-link-inactive{% endif %}">
-      <i class="fas fa-tasks w-5 text-center"></i>
-      <span>Mise en Place</span>
-    </a>
-    <a href="{% url 'production_list' %}" class="nav-link {% if 'production' in request.resolver_match.url_name|default:'' %}nav-link-active{% else %}nav-link-inactive{% endif %}">
-      <i class="fas fa-fire w-5 text-center"></i>
-      <span>Producción</span>
-    </a>
-    <a href="{% url 'recipe_list' %}" class="nav-link {% if 'recipe' in request.resolver_match.url_name|default:'' %}nav-link-active{% else %}nav-link-inactive{% endif %}">
-      <i class="fas fa-book-open w-5 text-center"></i>
-      <span>Recetas</span>
+    <a href="{% url 'mise_en_place_kanban' %}" class="nav-link {% if 'mise' in request.resolver_match.url_name|default:'' %}active{% endif %}" data-label="Mise en Place">
+      <span class="nav-icon"><i class="fas fa-tasks"></i></span>
+      <span class="sidebar-label">Mise en Place</span>
     </a>
 
-    <div class="pt-3 pb-1 px-3">
-      <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Gestión</p>
-    </div>
+    <a href="{% url 'production_list' %}" class="nav-link {% if 'production' in request.resolver_match.url_name|default:'' %}active{% endif %}" data-label="Producción">
+      <span class="nav-icon"><i class="fas fa-fire"></i></span>
+      <span class="sidebar-label">Producción</span>
+    </a>
 
-    <a href="{% url 'ingredient_list' %}" class="nav-link {% if 'ingredient' in request.resolver_match.url_name|default:'' %}nav-link-active{% else %}nav-link-inactive{% endif %}">
-      <i class="fas fa-box w-5 text-center"></i>
-      <span>Inventario</span>
+    <a href="{% url 'recipe_list' %}" class="nav-link {% if 'recipe' in request.resolver_match.url_name|default:'' %}active{% endif %}" data-label="Recetas">
+      <span class="nav-icon"><i class="fas fa-book-open"></i></span>
+      <span class="sidebar-label">Recetas</span>
     </a>
-    <a href="{% url 'purchase_list_index' %}" class="nav-link {% if 'purchase' in request.resolver_match.url_name|default:'' %}nav-link-active{% else %}nav-link-inactive{% endif %}">
-      <i class="fas fa-shopping-cart w-5 text-center"></i>
-      <span>Compras</span>
+
+    <div class="sidebar-section-title">Gestión</div>
+
+    <a href="{% url 'ingredient_list' %}" class="nav-link {% if 'ingredient' in request.resolver_match.url_name|default:'' %}active{% endif %}" data-label="Inventario">
+      <span class="nav-icon"><i class="fas fa-box"></i></span>
+      <span class="sidebar-label">Inventario</span>
     </a>
-    <a href="{% url 'waste_list' %}" class="nav-link {% if 'waste' in request.resolver_match.url_name|default:'' %}nav-link-active{% else %}nav-link-inactive{% endif %}">
-      <i class="fas fa-trash-alt w-5 text-center"></i>
-      <span>Desperdicios</span>
+
+    <a href="{% url 'purchase_list_index' %}" class="nav-link {% if 'purchase' in request.resolver_match.url_name|default:'' %}active{% endif %}" data-label="Compras">
+      <span class="nav-icon"><i class="fas fa-shopping-cart"></i></span>
+      <span class="sidebar-label">Compras</span>
     </a>
-    <a href="{% url 'equipment_issue_list' %}" class="nav-link {% if 'equipment' in request.resolver_match.url_name|default:'' %}nav-link-active{% else %}nav-link-inactive{% endif %}">
-      <i class="fas fa-wrench w-5 text-center"></i>
-      <span>Equipos</span>
-      {% with active=request.user %}
-      {% endwith %}
+
+    <a href="{% url 'waste_list' %}" class="nav-link {% if 'waste' in request.resolver_match.url_name|default:'' %}active{% endif %}" data-label="Desperdicios">
+      <span class="nav-icon"><i class="fas fa-trash-alt"></i></span>
+      <span class="sidebar-label">Desperdicios</span>
     </a>
+
+    <a href="{% url 'equipment_issue_list' %}" class="nav-link {% if 'equipment' in request.resolver_match.url_name|default:'' %}active{% endif %}" data-label="Equipos">
+      <span class="nav-icon"><i class="fas fa-wrench"></i></span>
+      <span class="sidebar-label">Equipos</span>
+    </a>
+
   </nav>
 
-  <!-- Bottom user section -->
-  <div class="border-t border-gray-100 dark:border-gray-700 px-3 py-3 space-y-1">
-    <a href="{% url 'notification_list' %}" class="nav-link nav-link-inactive relative">
-      <i class="fas fa-bell w-5 text-center"></i>
-      <span>Notificaciones</span>
-      {% if unread_notifications_count > 0 %}
-      <span class="ml-auto bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">{{ unread_notifications_count }}</span>
-      {% endif %}
+  <!-- Bottom -->
+  <div class="py-3 border-t space-y-0.5 flex-shrink-0" style="border-color:var(--border)">
+    <!-- Notifications -->
+    <a href="{% url 'notification_list' %}" class="nav-link {% if 'notification' in request.resolver_match.url_name|default:'' %}active{% endif %}" data-label="Notificaciones">
+      <span class="nav-icon relative">
+        <i class="fas fa-bell"></i>
+        {% if unread_notifications_count > 0 %}
+        <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center text-[9px] font-bold" style="background:#ef4444">{{ unread_notifications_count }}</span>
+        {% endif %}
+      </span>
+      <span class="sidebar-label">
+        Notificaciones
+        {% if unread_notifications_count > 0 %}
+        <span class="ml-auto ch-badge ch-badge-red text-xs">{{ unread_notifications_count }}</span>
+        {% endif %}
+      </span>
     </a>
-    <a href="{% url 'profile' %}" class="nav-link nav-link-inactive">
-      <div class="w-5 h-5 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center">
-        <i class="fas fa-user text-brand-600 dark:text-brand-300 text-xs"></i>
-      </div>
-      <span class="truncate max-w-[120px]">{{ request.user.get_short_name|default:request.user.username }}</span>
+
+    <!-- Search shortcut -->
+    <button @click="openCommand()" class="nav-link w-full text-left" data-label="Buscar (⌘K)">
+      <span class="nav-icon"><i class="fas fa-search"></i></span>
+      <span class="sidebar-label flex items-center justify-between flex-1">
+        <span>Buscar</span>
+        <kbd class="text-[10px] px-1.5 py-0.5 rounded" style="background:var(--surface-2);color:var(--text-3);border:1px solid var(--border-2)">⌘K</kbd>
+      </span>
+    </button>
+
+    <!-- Sidebar collapse (desktop only) -->
+    <button @click="sidebarCollapsed=!sidebarCollapsed" class="nav-link w-full text-left hidden lg:flex" :data-label="sidebarCollapsed ? 'Expandir' : 'Colapsar'">
+      <span class="nav-icon"><i class="fas" :class="sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i></span>
+      <span class="sidebar-label">Colapsar</span>
+    </button>
+
+    <!-- User -->
+    <a href="{% url 'profile' %}" class="nav-link" data-label="{{ request.user.get_short_name|default:request.user.username }}">
+      <span class="nav-icon">
+        <div class="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background:var(--accent)">
+          {{ request.user.first_name|first|default:request.user.username|first|upper }}
+        </div>
+      </span>
+      <span class="sidebar-label text-xs truncate max-w-[100px]">{{ request.user.get_full_name|default:request.user.username }}</span>
     </a>
-    <form method="post" action="{% url 'toggle_dark_mode' %}">
+
+    <!-- Dark mode -->
+    <form method="post" action="{% url 'toggle_dark_mode' %}" x-data>
       {% csrf_token %}
-      <button type="submit" class="nav-link nav-link-inactive w-full text-left">
-        <i class="fas {% if request.user.dark_mode %}fa-sun{% else %}fa-moon{% endif %} w-5 text-center"></i>
-        <span>{% if request.user.dark_mode %}Modo Claro{% else %}Modo Oscuro{% endif %}</span>
+      <button type="submit" class="nav-link w-full text-left" :data-label="{% if request.user.dark_mode %}'Modo claro'{% else %}'Modo oscuro'{% endif %}">
+        <span class="nav-icon"><i class="fas {% if request.user.dark_mode %}fa-sun{% else %}fa-moon{% endif %}"></i></span>
+        <span class="sidebar-label">{% if request.user.dark_mode %}Modo claro{% else %}Modo oscuro{% endif %}</span>
       </button>
     </form>
-    <a href="{% url 'logout' %}" class="nav-link nav-link-inactive text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">
-      <i class="fas fa-sign-out-alt w-5 text-center"></i>
-      <span>Cerrar sesión</span>
+
+    <!-- Logout -->
+    <a href="{% url 'logout' %}" class="nav-link" style="color:var(--text-3)" data-label="Salir">
+      <span class="nav-icon"><i class="fas fa-sign-out-alt"></i></span>
+      <span class="sidebar-label" style="color:var(--text-3)">Cerrar sesión</span>
     </a>
   </div>
 </aside>
 
-<!-- Main content -->
-<main class="lg:ml-64 min-h-screen flex flex-col">
-  <div class="flex-1 px-4 lg:px-6 py-4 pt-16 lg:pt-6">
+<!-- Mobile overlay -->
+<div
+  x-show="sidebarMobileOpen"
+  @click="sidebarMobileOpen=false"
+  class="fixed inset-0 z-30 lg:hidden"
+  style="background:rgba(0,0,0,0.5);backdrop-filter:blur(2px)"
+  x-transition:enter="transition duration-200"
+  x-transition:enter-start="opacity-0"
+  x-transition:enter-end="opacity-100"
+  x-transition:leave="transition duration-150"
+  x-transition:leave-start="opacity-100"
+  x-transition:leave-end="opacity-0"
+></div>
 
-    <!-- Flash messages -->
+
+<!-- ══════════════ TOPBAR (mobile) ══════════════ -->
+<header class="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center px-4 gap-3" style="background:var(--surface);border-bottom:1px solid var(--border)">
+  <button @click="sidebarMobileOpen=!sidebarMobileOpen" class="ch-btn ch-btn-ghost ch-btn-icon text-sm" style="color:var(--text-2)">
+    <i class="fas fa-bars"></i>
+  </button>
+  <span class="font-bold text-base flex-1" style="color:var(--accent)">Chefy</span>
+  <button @click="openCommand()" class="ch-btn ch-btn-ghost ch-btn-icon" style="color:var(--text-2)">
+    <i class="fas fa-search text-sm"></i>
+  </button>
+  <a href="{% url 'notification_list' %}" class="ch-btn ch-btn-ghost ch-btn-icon relative" style="color:var(--text-2)">
+    <i class="fas fa-bell text-sm"></i>
+    {% if unread_notifications_count > 0 %}
+    <span class="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full text-white flex items-center justify-center text-[8px] font-bold" style="background:#ef4444">{{ unread_notifications_count }}</span>
+    {% endif %}
+  </a>
+</header>
+
+
+<!-- ══════════════ MAIN ══════════════ -->
+<main id="main-content"
+  class="min-h-screen flex flex-col transition-all duration-200"
+  :style="sidebarCollapsed ? 'padding-left:var(--sidebar-w-c)' : 'padding-left:var(--sidebar-w)'"
+  style="padding-left: var(--sidebar-w)"
+  x-bind:style="$el.style.paddingLeft = (sidebarCollapsed ? 'var(--sidebar-w-c)' : 'var(--sidebar-w)')"
+>
+  <!-- Desktop: uses dynamic padding. Mobile: no left padding -->
+  <div class="flex-1 px-4 lg:px-7 pt-16 lg:pt-0 pb-20 lg:pb-8 max-w-[1400px] mx-auto w-full">
+
+    <!-- Messages -->
     {% if messages %}
-    <div class="mb-4 space-y-2">
+    <div class="pt-5 space-y-2" id="messages-container">
       {% for message in messages %}
-      <div class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium
-        {% if message.tags == 'success' %}bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800
-        {% elif message.tags == 'error' %}bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800
-        {% else %}bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800{% endif %}">
-        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
-        {{ message }}
+      <div class="ch-alert {% if message.tags == 'success' %}ch-alert-success{% elif message.tags == 'error' %}ch-alert-error{% else %}ch-alert-info{% endif %} animate-slide-up"
+           x-data="{show:true}" x-show="show"
+           x-init="setTimeout(()=>show=false, 4000)">
+        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-times-circle{% else %}fa-info-circle{% endif %} mt-0.5 flex-shrink-0"></i>
+        <span>{{ message }}</span>
       </div>
       {% endfor %}
     </div>
     {% endif %}
 
-    {% block content %}{% endblock %}
+    <!-- Page content -->
+    <div class="py-6" id="page-content">
+      {% block content %}{% endblock %}
+    </div>
   </div>
 </main>
 
+<!-- Mobile adjust for sidebar-less layout -->
+<style>
+  @media (max-width: 1023px) {
+    #main-content { padding-left: 0 !important; }
+  }
+</style>
+
+
+<!-- ══════════════ BOTTOM NAV (mobile) ══════════════ -->
+<nav class="bottom-nav lg:hidden" style="padding-bottom: env(safe-area-inset-bottom)">
+  <a href="{% url 'dashboard' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+    <span class="bn-icon"><i class="fas fa-th-large"></i></span>
+    <span>Inicio</span>
+  </a>
+  <a href="{% url 'mise_en_place_kanban' %}" class="bottom-nav-item {% if 'mise' in request.resolver_match.url_name|default:'' %}active{% endif %}">
+    <span class="bn-icon"><i class="fas fa-tasks"></i></span>
+    <span>Mise</span>
+  </a>
+  <button @click="openCommand()" class="bottom-nav-item">
+    <span class="bn-icon" style="width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;margin-top:-8px">
+      <i class="fas fa-search text-sm"></i>
+    </span>
+    <span class="opacity-0 text-[8px]">·</span>
+  </button>
+  <a href="{% url 'ingredient_list' %}" class="bottom-nav-item {% if 'ingredient' in request.resolver_match.url_name|default:'' %}active{% endif %}">
+    <span class="bn-icon"><i class="fas fa-box"></i></span>
+    <span>Stock</span>
+  </a>
+  <a href="{% url 'notification_list' %}" class="bottom-nav-item {% if 'notification' in request.resolver_match.url_name|default:'' %}active{% endif %} relative">
+    <span class="bn-icon relative">
+      <i class="fas fa-bell"></i>
+      {% if unread_notifications_count > 0 %}<span class="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full" style="background:#ef4444"></span>{% endif %}
+    </span>
+    <span>Alertas</span>
+  </a>
+</nav>
+
+
+<!-- ══════════════ FAB ══════════════ -->
+<div class="fab-wrap lg:block" x-show="!commandOpen">
+  <div x-show="fabOpen" class="flex flex-col gap-2 items-end animate-slide-up" x-transition>
+    <a href="{% url 'mise_en_place_create' %}" class="fab-action">
+      <span class="fab-action-icon" style="background:rgba(99,102,241,0.12);color:var(--accent)"><i class="fas fa-tasks"></i></span>
+      Nueva tarea
+    </a>
+    <a href="{% url 'waste_create' %}" class="fab-action">
+      <span class="fab-action-icon" style="background:rgba(239,68,68,0.12);color:#ef4444"><i class="fas fa-trash-alt"></i></span>
+      Registrar desperdicio
+    </a>
+    <a href="{% url 'equipment_issue_create' %}" class="fab-action">
+      <span class="fab-action-icon" style="background:rgba(249,115,22,0.12);color:#f97316"><i class="fas fa-wrench"></i></span>
+      Reportar equipo
+    </a>
+    <a href="{% url 'purchase_list_generate' %}" class="fab-action">
+      <span class="fab-action-icon" style="background:rgba(34,197,94,0.12);color:#16a34a"><i class="fas fa-shopping-cart"></i></span>
+      Lista de compras
+    </a>
+    <a href="{% url 'production_create' %}" class="fab-action">
+      <span class="fab-action-icon" style="background:rgba(251,146,60,0.12);color:#f97316"><i class="fas fa-fire"></i></span>
+      Nueva producción
+    </a>
+  </div>
+  <button class="fab-btn" @click="fabOpen=!fabOpen" :title="fabOpen ? 'Cerrar' : 'Acciones rápidas'">
+    <i class="fas transition-transform duration-200" :class="fabOpen ? 'fa-times rotate-90' : 'fa-plus'"></i>
+  </button>
+</div>
+
+
+<!-- ══════════════ COMMAND PALETTE ══════════════ -->
+<div x-show="commandOpen" @click.self="closeCommand()" class="cmd-overlay"
+     x-transition:enter="transition duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+     x-transition:leave="transition duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+  <div class="cmd-palette animate-scale-in" @keydown.escape.window="closeCommand()">
+    <div class="cmd-input-wrap">
+      <i class="fas fa-search text-sm" style="color:var(--text-3)"></i>
+      <input type="text"
+        class="cmd-input"
+        placeholder="Buscar recetas, ingredientes, páginas..."
+        x-model="searchQuery"
+        @input.debounce.300ms="doSearch()"
+        @keydown.arrow-down.prevent="selectNext()"
+        @keydown.arrow-up.prevent="selectPrev()"
+        @keydown.enter="goToSelected()"
+        x-ref="cmdInput"
+        id="cmd-input"
+        autocomplete="off">
+      <kbd class="text-[11px] px-2 py-0.5 rounded" style="background:var(--surface-2);color:var(--text-3);border:1px solid var(--border-2)">Esc</kbd>
+    </div>
+    <div class="cmd-results" id="cmd-results">
+      <template x-if="searchQuery.length === 0">
+        <div>
+          <div class="cmd-section-title">Páginas</div>
+          <template x-for="(item, i) in navItems" :key="item.url">
+            <a :href="item.url" @click="closeCommand()" class="cmd-item" :class="{'selected': selectedIndex === i}">
+              <span class="cmd-item-icon" :style="'background:'+item.bg+';color:'+item.color"><i :class="'fas fa-'+item.icon"></i></span>
+              <span class="text-sm font-medium" style="color:var(--text)" x-text="item.label"></span>
+            </a>
+          </template>
+          <div class="cmd-section-title mt-2">Acciones rápidas</div>
+          <template x-for="(item, i) in quickActions" :key="item.url">
+            <a :href="item.url" @click="closeCommand()" class="cmd-item" :class="{'selected': selectedIndex === navItems.length + i}">
+              <span class="cmd-item-icon" style="background:rgba(99,102,241,0.1);color:var(--accent)"><i :class="'fas fa-'+item.icon"></i></span>
+              <span class="text-sm" style="color:var(--text)" x-text="item.label"></span>
+            </a>
+          </template>
+        </div>
+      </template>
+      <template x-if="searchQuery.length > 0 && searchResults.length === 0 && !searching">
+        <div class="empty-state py-8">
+          <div class="empty-state-icon text-2xl">🔍</div>
+          <div class="empty-state-title" x-text="'Sin resultados para &quot;'+searchQuery+'&quot;'"></div>
+        </div>
+      </template>
+      <template x-if="searching">
+        <div class="flex items-center justify-center py-8 gap-3" style="color:var(--text-3)">
+          <i class="fas fa-circle-notch fa-spin"></i>
+          <span class="text-sm">Buscando...</span>
+        </div>
+      </template>
+      <template x-if="searchResults.length > 0">
+        <div>
+          <template x-for="(group, gi) in groupedResults" :key="gi">
+            <div>
+              <div class="cmd-section-title" x-text="group.title"></div>
+              <template x-for="(item, ii) in group.items" :key="item.url">
+                <a :href="item.url" @click="closeCommand()" class="cmd-item" :class="{'selected': selectedIndex === getResultIndex(gi,ii)}">
+                  <span class="cmd-item-icon" style="background:rgba(99,102,241,0.1);color:var(--accent)"><i :class="'fas fa-'+item.icon"></i></span>
+                  <div>
+                    <div class="text-sm font-medium" style="color:var(--text)" x-text="item.label"></div>
+                    <div class="text-xs" style="color:var(--text-3)" x-text="item.sub"></div>
+                  </div>
+                </a>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+    <div class="flex items-center gap-3 px-4 py-2.5 border-t text-xs" style="border-color:var(--border);color:var(--text-3)">
+      <span><kbd class="px-1 py-0.5 rounded text-[10px]" style="background:var(--surface-2);border:1px solid var(--border-2)">↑↓</kbd> navegar</span>
+      <span><kbd class="px-1 py-0.5 rounded text-[10px]" style="background:var(--surface-2);border:1px solid var(--border-2)">↵</kbd> abrir</span>
+      <span><kbd class="px-1 py-0.5 rounded text-[10px]" style="background:var(--surface-2);border:1px solid var(--border-2)">Esc</kbd> cerrar</span>
+    </div>
+  </div>
+</div>
+
+
 {% else %}
+<!-- ══════════════ AUTH PAGES ══════════════ -->
 {% block auth_content %}{% endblock %}
 {% endif %}
 
+
+<!-- ══════════════ TOAST CONTAINER ══════════════ -->
+<div id="toast-container" class="toast-container"></div>
+
+
+<!-- ══════════════ GLOBAL JS ══════════════ -->
 <script>
-  function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebar-overlay');
-    const isOpen = !sidebar.classList.contains('-translate-x-full');
-    if (isOpen) {
-      sidebar.classList.add('-translate-x-full');
-      overlay.classList.add('hidden');
-    } else {
-      sidebar.classList.remove('-translate-x-full');
-      overlay.classList.remove('hidden');
-    }
-  }
+function chefyApp() {
+  return {
+    // State
+    sidebarCollapsed: localStorage.getItem('chefy-sidebar-collapsed') === 'true',
+    sidebarMobileOpen: false,
+    commandOpen: false,
+    fabOpen: false,
+    searchQuery: '',
+    searchResults: [],
+    searching: false,
+    selectedIndex: 0,
 
-  // Auto-dismiss messages
-  setTimeout(() => {
-    document.querySelectorAll('[data-autohide]').forEach(el => el.remove());
-  }, 4000);
+    // Nav items for command palette
+    navItems: [
+      { label: 'Dashboard',      url: '/',                   icon: 'th-large',     bg: 'rgba(99,102,241,0.1)',  color: 'var(--accent)' },
+      { label: 'Mise en Place',  url: '/mise-en-place/',     icon: 'tasks',         bg: 'rgba(99,102,241,0.1)',  color: 'var(--accent)' },
+      { label: 'Producción',     url: '/produccion/',        icon: 'fire',          bg: 'rgba(249,115,22,0.1)',  color: '#f97316' },
+      { label: 'Recetas',        url: '/recetas/',           icon: 'book-open',     bg: 'rgba(34,197,94,0.1)',   color: '#16a34a' },
+      { label: 'Inventario',     url: '/inventario/',        icon: 'box',           bg: 'rgba(59,130,246,0.1)',  color: '#3b82f6' },
+      { label: 'Compras',        url: '/compras/',           icon: 'shopping-cart', bg: 'rgba(234,179,8,0.1)',   color: '#ca8a04' },
+      { label: 'Desperdicios',   url: '/desperdicios/',      icon: 'trash-alt',     bg: 'rgba(239,68,68,0.1)',   color: '#ef4444' },
+      { label: 'Equipos',        url: '/equipos/',           icon: 'wrench',        bg: 'rgba(249,115,22,0.1)',  color: '#f97316' },
+    ],
+    quickActions: [
+      { label: 'Nueva tarea de Mise en Place', url: '/mise-en-place/nueva/', icon: 'plus' },
+      { label: 'Registrar desperdicio',        url: '/desperdicios/nuevo/',  icon: 'trash-alt' },
+      { label: 'Reportar equipo dañado',       url: '/equipos/nuevo/',       icon: 'wrench' },
+      { label: 'Generar lista de compras',     url: '/compras/generar/',     icon: 'magic' },
+    ],
 
-  // CSRF helper for fetch
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      for (const cookie of document.cookie.split(';')) {
-        const c = cookie.trim();
-        if (c.startsWith(name + '=')) {
-          cookieValue = decodeURIComponent(c.split('=')[1]);
-          break;
+    get groupedResults() {
+      const groups = [];
+      const ings = this.searchResults.filter(r => r.type === 'ingredient');
+      const recs = this.searchResults.filter(r => r.type === 'recipe');
+      if (ings.length) groups.push({ title: 'Ingredientes', items: ings });
+      if (recs.length) groups.push({ title: 'Recetas', items: recs });
+      return groups;
+    },
+
+    getResultIndex(gi, ii) {
+      let idx = this.navItems.length + this.quickActions.length;
+      for (let i = 0; i < gi; i++) idx += this.groupedResults[i].items.length;
+      return idx + ii;
+    },
+
+    get totalItems() {
+      if (this.searchQuery.length === 0) return this.navItems.length + this.quickActions.length;
+      return this.searchResults.length;
+    },
+
+    init() {
+      // Persist sidebar collapse state
+      this.$watch('sidebarCollapsed', v => localStorage.setItem('chefy-sidebar-collapsed', v));
+      // Close FAB when clicking outside
+      document.addEventListener('click', e => {
+        if (!e.target.closest('.fab-wrap')) this.fabOpen = false;
+      });
+      // HTMX toast on successful mutations
+      document.addEventListener('htmx:afterRequest', e => {
+        if (e.detail.xhr.status === 200 && e.detail.requestConfig.verb === 'post') {
+          const msg = e.detail.xhr.getResponseHeader('X-Chefy-Message');
+          if (msg) this.showToast(msg, 'success');
+        }
+      });
+    },
+
+    openCommand() {
+      this.commandOpen = true;
+      this.searchQuery = '';
+      this.searchResults = [];
+      this.selectedIndex = 0;
+      this.$nextTick(() => document.getElementById('cmd-input')?.focus());
+    },
+
+    closeCommand() {
+      this.commandOpen = false;
+      this.searchQuery = '';
+      this.searching = false;
+    },
+
+    async doSearch() {
+      if (!this.searchQuery.trim()) { this.searchResults = []; return; }
+      this.searching = true;
+      try {
+        const res = await fetch(`/api/search/?q=${encodeURIComponent(this.searchQuery)}`, {
+          headers: { 'X-CSRFToken': getCsrfToken(), 'X-Requested-With': 'XMLHttpRequest' },
+          credentials: 'same-origin'
+        });
+        if (res.ok) {
+          const data = await res.json();
+          this.searchResults = [
+            ...(data.ingredients || []).map(i => ({ type:'ingredient', label: i.name, sub: `${i.current_stock} ${i.unit} · ${i.location_display || ''}`, url: `/inventario/${i.id}/`, icon: 'box' })),
+            ...(data.recipes || []).map(r => ({ type:'recipe', label: r.name, sub: r.category_display || '', url: `/recetas/${r.id}/`, icon: 'book-open' })),
+          ];
+          this.selectedIndex = 0;
+        }
+      } catch(e) { console.warn(e); }
+      finally { this.searching = false; }
+    },
+
+    selectNext() { this.selectedIndex = Math.min(this.selectedIndex + 1, this.totalItems - 1); },
+    selectPrev() { this.selectedIndex = Math.max(this.selectedIndex - 1, 0); },
+
+    goToSelected() {
+      if (this.searchQuery.length === 0) {
+        const allItems = [...this.navItems, ...this.quickActions];
+        if (allItems[this.selectedIndex]) {
+          window.location.href = allItems[this.selectedIndex].url;
+          this.closeCommand();
+        }
+      } else {
+        if (this.searchResults[this.selectedIndex]) {
+          window.location.href = this.searchResults[this.selectedIndex].url;
+          this.closeCommand();
         }
       }
+    },
+
+    showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle';
+      const color = type === 'success' ? '#22c55e' : type === 'error' ? '#ef4444' : 'var(--accent)';
+      toast.innerHTML = `<i class="fas fa-${icon}" style="color:${color}"></i><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.animation = 'toastOut 200ms ease forwards';
+        setTimeout(() => toast.remove(), 200);
+      }, 3500);
     }
-    return cookieValue;
   }
-  window.csrfToken = getCookie('csrftoken');
+}
+
+function getCsrfToken() {
+  return document.cookie.split(';').find(c=>c.trim().startsWith('csrftoken='))?.split('=')[1] || '';
+}
+
+// HTMX config
+document.addEventListener('DOMContentLoaded', () => {
+  htmx.config.globalViewTransitions = false;
+  htmx.config.defaultSwapStyle = 'innerHTML';
+  document.body.addEventListener('htmx:configRequest', (e) => {
+    e.detail.headers['X-CSRFToken'] = getCsrfToken();
+  });
+});
 </script>
+
 {% block extra_js %}{% endblock %}
 </body>
 </html>

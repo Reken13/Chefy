@@ -1,69 +1,72 @@
-<div class="card p-4 space-y-2.5 {% if task.is_overdue %}ring-1 ring-red-300 dark:ring-red-700{% endif %}">
+<div id="task-card-{{ task.pk }}" class="ch-card p-4 space-y-3 {% if task.is_overdue %}ring-1 ring-red-400/50{% endif %} group">
   <div class="flex items-start justify-between gap-2">
     <div class="flex-1 min-w-0">
-      <p class="font-semibold text-sm text-gray-900 dark:text-white {% if task.status == 'terminado' %}line-through opacity-60{% endif %}">{{ task.title }}</p>
+      <p class="font-semibold text-sm {% if task.status == 'terminado' %}line-through opacity-50{% endif %}" style="color:var(--text)">{{ task.title }}</p>
       {% if task.recipe %}
-      <p class="text-xs text-brand-500 dark:text-brand-400 mt-0.5">
-        <i class="fas fa-book-open mr-1"></i>{{ task.recipe.name }}
+      <p class="text-xs mt-0.5" style="color:var(--accent)">
+        <i class="fas fa-book-open mr-1 opacity-70"></i>{{ task.recipe.name }}
       </p>
       {% endif %}
     </div>
-    <span class="badge flex-shrink-0
-      {% if task.priority == 'critica' %}bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300
-      {% elif task.priority == 'alta' %}bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300
-      {% elif task.priority == 'media' %}bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300
-      {% else %}bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300{% endif %}">
-      {{ task.get_priority_display }}
+    <span class="ch-badge-{% if task.priority == 'critica' %}red{% elif task.priority == 'alta' %}orange{% elif task.priority == 'media' %}yellow{% else %}gray{% endif %} flex-shrink-0 text-xs">
+      {% if task.priority == 'critica' %}<i class="fas fa-fire mr-1"></i>{% endif %}{{ task.get_priority_display }}
     </span>
   </div>
 
   {% if task.quantity or task.assigned_to or task.deadline %}
-  <div class="flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
+  <div class="flex flex-wrap gap-2 text-xs" style="color:var(--text-muted)">
     {% if task.quantity %}
-    <span class="flex items-center gap-1"><i class="fas fa-balance-scale text-xs"></i>{{ task.quantity }}</span>
+    <span class="flex items-center gap-1"><i class="fas fa-balance-scale opacity-60"></i>{{ task.quantity }}</span>
     {% endif %}
     {% if task.assigned_to %}
-    <span class="flex items-center gap-1"><i class="fas fa-user text-xs"></i>{{ task.assigned_to.get_short_name|default:task.assigned_to.username }}</span>
+    <span class="flex items-center gap-1"><i class="fas fa-user opacity-60"></i>{{ task.assigned_to.get_short_name|default:task.assigned_to.username }}</span>
     {% endif %}
     {% if task.deadline %}
-    <span class="flex items-center gap-1 {% if task.is_overdue %}text-red-500 dark:text-red-400 font-semibold{% endif %}">
-      <i class="fas fa-clock text-xs"></i>{{ task.deadline|date:"H:i" }}
-      {% if task.is_overdue %}<span class="badge bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">Atrasado</span>{% endif %}
+    <span class="flex items-center gap-1 {% if task.is_overdue %}font-semibold{% endif %}" {% if task.is_overdue %}style="color:var(--danger)"{% endif %}>
+      <i class="fas fa-clock opacity-60"></i>{{ task.deadline|date:"H:i" }}
+      {% if task.is_overdue %}<span class="ch-badge-red text-xs">Atrasado</span>{% endif %}
     </span>
     {% endif %}
   </div>
   {% endif %}
 
   {% if task.notes %}
-  <p class="text-xs text-gray-400 dark:text-gray-500 italic truncate">{{ task.notes }}</p>
+  <p class="text-xs italic truncate" style="color:var(--text-muted)">{{ task.notes }}</p>
   {% endif %}
 
   {% if task.status != 'terminado' %}
   <div class="flex gap-2 pt-1">
     {% if next_status %}
-    <form method="post" action="{% url 'mise_en_place_status' task.pk %}" class="flex-1">
+    <form hx-post="{% url 'mise_en_place_status' task.pk %}"
+          hx-vals='{"status":"{{ next_status }}"}'
+          hx-target="#task-card-{{ task.pk }}"
+          hx-swap="outerHTML"
+          class="flex-1">
       {% csrf_token %}
-      <input type="hidden" name="status" value="{{ next_status }}">
-      <button type="submit" class="w-full btn-primary py-1.5 text-xs justify-center
-        {% if next_status == 'terminado' %}bg-green-600 hover:bg-green-700{% endif %}">
+      <button type="submit" class="ch-btn-{% if next_status == 'terminado' %}success{% else %}primary{% endif %} w-full py-1.5 text-xs justify-center">
         <i class="fas {{ next_icon }}"></i> {{ next_label }}
       </button>
     </form>
     {% endif %}
-    <a href="{% url 'mise_en_place_edit' task.pk %}" class="btn-secondary py-1.5 px-2.5 text-xs">
+    <a href="{% url 'mise_en_place_edit' task.pk %}" class="ch-btn-secondary py-1.5 px-2.5 text-xs">
       <i class="fas fa-pen"></i>
     </a>
     <form method="post" action="{% url 'mise_en_place_delete' task.pk %}">
       {% csrf_token %}
-      <button type="submit" onclick="return confirm('¿Eliminar esta tarea?')" class="btn-danger py-1.5 px-2.5 text-xs">
+      <button type="submit" onclick="return confirm('¿Eliminar esta tarea?')" class="ch-btn-danger py-1.5 px-2.5 text-xs">
         <i class="fas fa-trash"></i>
       </button>
     </form>
   </div>
   {% else %}
-  <div class="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-    <i class="fas fa-check-circle"></i>
-    {% if task.completed_at %}Terminado a las {{ task.completed_at|date:"H:i" }}{% else %}Completado{% endif %}
+  <div class="flex items-center justify-between pt-1">
+    <div class="flex items-center gap-1.5 text-xs" style="color:var(--success)">
+      <i class="fas fa-check-circle"></i>
+      {% if task.completed_at %}Terminado {{ task.completed_at|date:"H:i" }}{% else %}Completado{% endif %}
+    </div>
+    <a href="{% url 'mise_en_place_edit' task.pk %}" class="text-xs opacity-0 group-hover:opacity-100 transition-opacity" style="color:var(--text-muted)">
+      <i class="fas fa-pen"></i>
+    </a>
   </div>
   {% endif %}
 </div>

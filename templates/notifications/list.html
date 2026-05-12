@@ -4,12 +4,17 @@
 {% block content %}
 <div class="max-w-2xl mx-auto space-y-5">
   <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Notificaciones</h1>
+    <div>
+      <h1 class="text-2xl font-bold" style="color:var(--text)">Notificaciones</h1>
+      {% if unread_count > 0 %}
+      <p class="text-sm mt-0.5" style="color:var(--accent)">{{ unread_count }} sin leer</p>
+      {% endif %}
+    </div>
     {% if unread_count > 0 %}
     <form method="post" action="{% url 'notification_mark_all_read' %}">
       {% csrf_token %}
-      <button type="submit" class="btn-secondary text-sm">
-        <i class="fas fa-check-double"></i> Marcar todas como leídas
+      <button type="submit" class="ch-btn-secondary text-sm">
+        <i class="fas fa-check-double mr-1.5"></i> Marcar todas
       </button>
     </form>
     {% endif %}
@@ -17,41 +22,45 @@
 
   <div class="space-y-2">
     {% for notif in notifications %}
-    <div class="card p-4 flex items-start gap-3 {% if not notif.is_read %}ring-1 ring-brand-200 dark:ring-brand-700{% endif %}">
+    <div class="ch-card p-4 flex items-start gap-3 {% if not notif.is_read %}ring-1{% endif %}"
+         {% if not notif.is_read %}style="ring-color:var(--accent)"{% endif %}>
       <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0
-        {% if notif.priority == 'critica' %}bg-red-100 dark:bg-red-900/30
-        {% elif notif.priority == 'advertencia' %}bg-yellow-100 dark:bg-yellow-900/30
-        {% else %}bg-brand-100 dark:bg-brand-900/30{% endif %}">
+        {% if notif.priority == 'critica' %}bg-red-500/10
+        {% elif notif.priority == 'advertencia' %}bg-yellow-500/10
+        {% else %}bg-blue-500/10{% endif %}">
         <i class="fas
           {% if notif.notification_type == 'stock_bajo' %}fa-exclamation-circle
           {% elif notif.notification_type in 'por_vencer,vencido' %}fa-clock
           {% elif notif.notification_type == 'tarea_atrasada' %}fa-tasks
           {% elif notif.notification_type == 'equipo_dañado' %}fa-wrench
           {% else %}fa-bell{% endif %}
-          {% if notif.priority == 'critica' %}text-red-600 dark:text-red-400
-          {% elif notif.priority == 'advertencia' %}text-yellow-600 dark:text-yellow-400
-          {% else %}text-brand-600 dark:text-brand-400{% endif %}"></i>
+          {% if notif.priority == 'critica' %}text-red-500
+          {% elif notif.priority == 'advertencia' %}text-yellow-500
+          {% else %}text-blue-500{% endif %} text-sm"></i>
       </div>
       <div class="flex-1 min-w-0">
         <div class="flex items-start justify-between gap-2">
           <div>
-            <p class="text-sm font-semibold text-gray-900 dark:text-white {% if not notif.is_read %}text-brand-600 dark:text-brand-400{% endif %}">{{ notif.title }}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ notif.message }}</p>
+            <p class="text-sm font-semibold {% if not notif.is_read %}{% endif %}" style="color:{% if not notif.is_read %}var(--accent){% else %}var(--text){% endif %}">
+              {{ notif.title }}
+            </p>
+            <p class="text-xs mt-0.5" style="color:var(--text-muted)">{{ notif.message }}</p>
           </div>
-          <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">{{ notif.created_at|date:"d/m H:i" }}</span>
+          <span class="text-xs whitespace-nowrap flex-shrink-0" style="color:var(--text-muted)">{{ notif.created_at|date:"d/m H:i" }}</span>
         </div>
         {% if not notif.is_read %}
         <form method="post" action="{% url 'notification_mark_read' notif.pk %}" class="mt-2">
           {% csrf_token %}
-          <button type="submit" class="text-xs text-brand-500 hover:underline">Marcar como leída</button>
+          <button type="submit" class="text-xs" style="color:var(--accent)">Marcar como leída</button>
         </form>
         {% endif %}
       </div>
     </div>
     {% empty %}
-    <div class="card p-12 text-center">
-      <i class="fas fa-bell-slash text-4xl text-gray-300 dark:text-gray-600 mb-3"></i>
-      <p class="text-gray-500 dark:text-gray-400">No hay notificaciones</p>
+    <div class="ch-card p-16 text-center">
+      <i class="fas fa-bell-slash text-4xl mb-4 block opacity-20" style="color:var(--text-muted)"></i>
+      <p class="font-medium" style="color:var(--text)">No hay notificaciones</p>
+      <p class="text-sm mt-1" style="color:var(--text-muted)">Estás al día</p>
     </div>
     {% endfor %}
   </div>

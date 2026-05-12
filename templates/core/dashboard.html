@@ -2,236 +2,264 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
+<div class="space-y-7 animate-fade-in">
 
-  <!-- Header -->
-  <div class="flex items-center justify-between">
+  <!-- ── Header ── -->
+  <div class="flex items-start justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Buenos días, {{ request.user.first_name|default:request.user.username }} 👋</h1>
-      <p class="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{{ today|date:"l, j \d\e F \d\e Y" }}</p>
+      <h1 class="text-2xl font-bold tracking-tight" style="color:var(--text)">
+        {% now "H" as current_hour %}
+        {% if current_hour|add:"0" < 12 %}Buenos días{% elif current_hour|add:"0" < 18 %}Buenas tardes{% else %}Buenas noches{% endif %}, {{ request.user.first_name|default:request.user.username }} 👋
+      </h1>
+      <p class="text-sm mt-0.5" style="color:var(--text-2)">{{ today|date:"l, j \d\e F" }}</p>
     </div>
-    <div class="hidden sm:flex gap-2">
-      <a href="{% url 'mise_en_place_create' %}" class="btn-primary">
-        <i class="fas fa-plus"></i> Nueva Tarea
-      </a>
-    </div>
+    <a href="{% url 'mise_en_place_create' %}" class="ch-btn ch-btn-primary hidden sm:flex">
+      <i class="fas fa-plus text-xs"></i> Nueva Tarea
+    </a>
   </div>
 
-  <!-- Critical alerts -->
-  {% if expired_items or overdue_tasks %}
+  <!-- ── Critical Alerts ── -->
+  {% if expired_items or overdue_tasks or active_equipment_issues %}
   <div class="space-y-2">
-    {% for item in expired_items %}
-    <div class="flex items-center gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3">
-      <div class="w-8 h-8 bg-red-100 dark:bg-red-800 rounded-lg flex items-center justify-center flex-shrink-0">
-        <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400 text-sm"></i>
+    {% for item in expired_items|slice:":3" %}
+    <div class="ch-alert ch-alert-error animate-slide-up flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-exclamation-triangle flex-shrink-0"></i>
+        <span class="font-semibold">VENCIDO:</span> {{ item.name }} — venció el {{ item.expiry_date|date:"d/m/Y" }}
       </div>
-      <div class="flex-1 min-w-0">
-        <p class="text-sm font-semibold text-red-800 dark:text-red-200">VENCIDO: {{ item.name }}</p>
-        <p class="text-xs text-red-600 dark:text-red-400">Venció el {{ item.expiry_date|date:"d/m/Y" }} — {{ item.current_stock }}{{ item.unit }}</p>
-      </div>
-      <a href="{% url 'ingredient_detail' item.pk %}" class="text-red-600 dark:text-red-400 text-xs font-medium hover:underline whitespace-nowrap">Ver →</a>
+      <a href="{% url 'ingredient_detail' item.pk %}" class="ch-btn ch-btn-sm" style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:11px">Ver →</a>
     </div>
     {% endfor %}
-    {% for task in overdue_tasks %}
-    <div class="flex items-center gap-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl px-4 py-3">
-      <div class="w-8 h-8 bg-orange-100 dark:bg-orange-800 rounded-lg flex items-center justify-center flex-shrink-0">
-        <i class="fas fa-clock text-orange-600 dark:text-orange-400 text-sm"></i>
+    {% for task in overdue_tasks|slice:":2" %}
+    <div class="ch-alert ch-alert-warn animate-slide-up flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-clock flex-shrink-0"></i>
+        <span class="font-semibold">ATRASADO:</span> {{ task.title }}
       </div>
-      <div class="flex-1 min-w-0">
-        <p class="text-sm font-semibold text-orange-800 dark:text-orange-200">ATRASADO: {{ task.title }}</p>
-        <p class="text-xs text-orange-600 dark:text-orange-400">Debía terminar {{ task.deadline|date:"H:i" }}</p>
-      </div>
-      <a href="{% url 'mise_en_place_kanban' %}" class="text-orange-600 dark:text-orange-400 text-xs font-medium hover:underline whitespace-nowrap">Ver →</a>
+      <a href="{% url 'mise_en_place_kanban' %}" class="ch-btn ch-btn-sm" style="background:rgba(249,115,22,0.15);color:#f97316;font-size:11px">Ver →</a>
     </div>
     {% endfor %}
   </div>
   {% endif %}
 
-  <!-- KPI Row -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-    <a href="{% url 'ingredient_list' %}?status=bajo" class="card p-4 hover:shadow-md transition group">
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Stock Bajo</p>
-          <p class="text-3xl font-bold mt-1 {% if low_stock_count > 0 %}text-red-600 dark:text-red-400{% else %}text-gray-900 dark:text-white{% endif %}">{{ low_stock_count }}</p>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">ingredientes</p>
+  <!-- ── KPI Row ── -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger">
+
+    <a href="{% url 'ingredient_list' %}?status=bajo" class="ch-card ch-card-hoverable p-5 animate-slide-up block">
+      <div class="flex items-start justify-between mb-3">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm"
+             style="background:{% if low_stock_count > 0 %}rgba(239,68,68,0.12){% else %}var(--surface-2){% endif %}; color:{% if low_stock_count > 0 %}#ef4444{% else %}var(--text-3){% endif %}">
+          <i class="fas fa-exclamation-circle"></i>
         </div>
-        <div class="w-10 h-10 {% if low_stock_count > 0 %}bg-red-100 dark:bg-red-900/30{% else %}bg-gray-100 dark:bg-gray-700{% endif %} rounded-xl flex items-center justify-center">
-          <i class="fas fa-exclamation-circle {% if low_stock_count > 0 %}text-red-500{% else %}text-gray-400{% endif %}"></i>
-        </div>
+        {% if low_stock_count > 0 %}
+        <span class="ch-badge ch-badge-red">Urgente</span>
+        {% endif %}
+      </div>
+      <div class="stat-widget">
+        <div class="stat-value {% if low_stock_count > 0 %}text-red-500{% endif %}">{{ low_stock_count }}</div>
+        <div class="stat-label">Stock bajo</div>
       </div>
     </a>
 
-    <a href="{% url 'mise_en_place_kanban' %}" class="card p-4 hover:shadow-md transition group">
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Mise en Place</p>
-          <p class="text-3xl font-bold mt-1 text-gray-900 dark:text-white">{{ mise_total }}</p>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">tareas hoy</p>
+    <a href="{% url 'mise_en_place_kanban' %}" class="ch-card ch-card-hoverable p-5 animate-slide-up block">
+      <div class="flex items-start justify-between mb-3">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm"
+             style="background:var(--accent-glow);color:var(--accent)">
+          <i class="fas fa-tasks"></i>
         </div>
-        <div class="w-10 h-10 bg-brand-100 dark:bg-brand-900/30 rounded-xl flex items-center justify-center">
-          <i class="fas fa-tasks text-brand-500"></i>
-        </div>
+        {% if in_progress_mise %}
+        <span class="ch-badge ch-badge-purple">En proceso</span>
+        {% endif %}
+      </div>
+      <div class="stat-widget">
+        <div class="stat-value">{{ mise_total }}</div>
+        <div class="stat-label">Tareas hoy</div>
       </div>
     </a>
 
-    <a href="{% url 'equipment_issue_list' %}" class="card p-4 hover:shadow-md transition group">
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Equipos</p>
-          <p class="text-3xl font-bold mt-1 {% if equipment_issues_count > 0 %}text-yellow-600 dark:text-yellow-400{% else %}text-gray-900 dark:text-white{% endif %}">{{ equipment_issues_count }}</p>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">problemas activos</p>
+    <a href="{% url 'equipment_issue_list' %}" class="ch-card ch-card-hoverable p-5 animate-slide-up block">
+      <div class="flex items-start justify-between mb-3">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm"
+             style="background:{% if equipment_issues_count > 0 %}rgba(249,115,22,0.12){% else %}var(--surface-2){% endif %}; color:{% if equipment_issues_count > 0 %}#f97316{% else %}var(--text-3){% endif %}">
+          <i class="fas fa-wrench"></i>
         </div>
-        <div class="w-10 h-10 {% if equipment_issues_count > 0 %}bg-yellow-100 dark:bg-yellow-900/30{% else %}bg-gray-100 dark:bg-gray-700{% endif %} rounded-xl flex items-center justify-center">
-          <i class="fas fa-wrench {% if equipment_issues_count > 0 %}text-yellow-500{% else %}text-gray-400{% endif %}"></i>
-        </div>
+        {% if equipment_issues_count > 0 %}
+        <span class="ch-badge ch-badge-orange">{{ equipment_issues_count }}</span>
+        {% endif %}
+      </div>
+      <div class="stat-widget">
+        <div class="stat-value {% if equipment_issues_count > 0 %}text-orange-500{% endif %}">{{ equipment_issues_count }}</div>
+        <div class="stat-label">Equipos</div>
       </div>
     </a>
 
-    <a href="{% url 'waste_list' %}" class="card p-4 hover:shadow-md transition group">
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Desperdicio Hoy</p>
-          <p class="text-3xl font-bold mt-1 {% if today_waste_cost > 0 %}text-orange-600 dark:text-orange-400{% else %}text-gray-900 dark:text-white{% endif %}">${{ today_waste_cost|floatformat:0 }}</p>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ today_waste_count }} registros</p>
-        </div>
-        <div class="w-10 h-10 {% if today_waste_cost > 0 %}bg-orange-100 dark:bg-orange-900/30{% else %}bg-gray-100 dark:bg-gray-700{% endif %} rounded-xl flex items-center justify-center">
-          <i class="fas fa-trash-alt {% if today_waste_cost > 0 %}text-orange-500{% else %}text-gray-400{% endif %}"></i>
+    <a href="{% url 'waste_list' %}" class="ch-card ch-card-hoverable p-5 animate-slide-up block">
+      <div class="flex items-start justify-between mb-3">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm"
+             style="background:{% if today_waste_cost > 0 %}rgba(239,68,68,0.10){% else %}var(--surface-2){% endif %}; color:{% if today_waste_cost > 0 %}#ef4444{% else %}var(--text-3){% endif %}">
+          <i class="fas fa-trash-alt"></i>
         </div>
       </div>
+      <div class="stat-widget">
+        <div class="stat-value {% if today_waste_cost > 0 %}text-red-500{% endif %}">${{ today_waste_cost|floatformat:0 }}</div>
+        <div class="stat-label">Desperdicio hoy</div>
+      </div>
     </a>
+
   </div>
 
-  <!-- Main grid -->
+  <!-- ── Main Grid ── -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-    <!-- Mise en Place Today -->
-    <div class="lg:col-span-2 card">
-      <div class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100 dark:border-gray-700">
-        <div class="flex items-center gap-2">
-          <i class="fas fa-tasks text-brand-500"></i>
-          <h2 class="font-semibold text-gray-900 dark:text-white">Mise en Place — Hoy</h2>
+    <!-- Mise en Place del día -->
+    <div class="lg:col-span-2 ch-card">
+      <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color:var(--border)">
+        <div class="flex items-center gap-2.5">
+          <i class="fas fa-tasks text-sm" style="color:var(--accent)"></i>
+          <h2 class="font-semibold text-sm" style="color:var(--text)">Mise en Place — Hoy</h2>
+          <span class="ch-badge ch-badge-purple">{{ pending_mise.count }} pending</span>
         </div>
-        <a href="{% url 'mise_en_place_kanban' %}" class="text-sm text-brand-600 dark:text-brand-400 hover:underline font-medium">Ver Kanban →</a>
+        <a href="{% url 'mise_en_place_kanban' %}" class="ch-btn ch-btn-ghost ch-btn-sm" style="font-size:12px">
+          Kanban <i class="fas fa-arrow-right text-xs ml-1"></i>
+        </a>
       </div>
-      <div class="p-5 space-y-2">
-        {% if pending_mise or in_progress_mise %}
-          {% for task in in_progress_mise %}
-          <div class="flex items-center gap-3 group">
-            <form method="post" action="{% url 'mise_en_place_status' task.pk %}">
-              {% csrf_token %}
-              <input type="hidden" name="status" value="terminado">
-              <button type="submit" class="w-5 h-5 rounded border-2 border-brand-400 bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center flex-shrink-0 hover:bg-brand-100 transition">
-                <i class="fas fa-circle text-brand-400 text-xs"></i>
-              </button>
-            </form>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ task.title }}</p>
-              {% if task.assigned_to %}<p class="text-xs text-gray-400">{{ task.assigned_to.get_short_name|default:task.assigned_to.username }}{% if task.quantity %} · {{ task.quantity }}{% endif %}</p>{% endif %}
-            </div>
-            <span class="badge bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 text-xs">En proceso</span>
+
+      <div class="divide-y" style="border-color:var(--border)" id="mise-list">
+        {% for task in in_progress_mise %}
+        <div class="flex items-center gap-3 px-6 py-3.5 group task-row" id="task-row-{{ task.pk }}">
+          <form hx-post="{% url 'mise_en_place_status' task.pk %}" hx-vals='{"status":"terminado"}'
+                hx-target="#task-row-{{ task.pk }}" hx-swap="outerHTML" hx-indicator="#task-row-{{ task.pk }}">
+            {% csrf_token %}
+            <button type="submit" class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all hover:scale-110"
+                    style="border-color:var(--accent);background:var(--accent-glow)">
+              <i class="fas fa-circle text-[6px]" style="color:var(--accent)"></i>
+            </button>
+          </form>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" style="color:var(--text)">{{ task.title }}</p>
+            <p class="text-xs" style="color:var(--text-3)">
+              {% if task.assigned_to %}{{ task.assigned_to.get_short_name|default:task.assigned_to.username }}{% endif %}
+              {% if task.quantity %} · {{ task.quantity }}{% endif %}
+            </p>
           </div>
-          {% endfor %}
-          {% for task in pending_mise|slice:":6" %}
-          <div class="flex items-center gap-3 group">
-            <form method="post" action="{% url 'mise_en_place_status' task.pk %}">
-              {% csrf_token %}
-              <input type="hidden" name="status" value="en_proceso">
-              <button type="submit" class="w-5 h-5 rounded border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0 hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition flex-shrink-0">
-              </button>
-            </form>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm text-gray-700 dark:text-gray-300 truncate">{{ task.title }}</p>
-              {% if task.assigned_to %}<p class="text-xs text-gray-400">{{ task.assigned_to.get_short_name|default:task.assigned_to.username }}{% if task.quantity %} · {{ task.quantity }}{% endif %}</p>{% endif %}
-            </div>
-            <span class="badge
-              {% if task.priority == 'critica' %}bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300
-              {% elif task.priority == 'alta' %}bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300
-              {% else %}bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300{% endif %}">
+          <span class="ch-badge ch-badge-purple flex-shrink-0">En proceso</span>
+        </div>
+        {% endfor %}
+
+        {% for task in pending_mise|slice:":7" %}
+        <div class="flex items-center gap-3 px-6 py-3.5 group task-row transition-opacity" id="task-row-{{ task.pk }}">
+          <form hx-post="{% url 'mise_en_place_status' task.pk %}" hx-vals='{"status":"en_proceso"}'
+                hx-target="#task-row-{{ task.pk }}" hx-swap="outerHTML" hx-indicator="#task-row-{{ task.pk }}">
+            {% csrf_token %}
+            <button type="submit" class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 hover:scale-110 transition-all"
+                    style="border-color:var(--border-2)">
+            </button>
+          </form>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm truncate" style="color:var(--text)">{{ task.title }}</p>
+            <p class="text-xs" style="color:var(--text-3)">
+              {% if task.assigned_to %}{{ task.assigned_to.get_short_name|default:task.assigned_to.username }}{% endif %}
+              {% if task.quantity %} · {{ task.quantity }}{% endif %}
+              {% if task.deadline %} · <span {% if task.is_overdue %}style="color:#f97316"{% endif %}>{{ task.deadline|date:"H:i" }}</span>{% endif %}
+            </p>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="priority-dot ch-badge ch-badge-{% if task.priority == 'critica' %}red{% elif task.priority == 'alta' %}orange{% elif task.priority == 'media' %}yellow{% else %}gray{% endif %} priority-{{ task.priority }}">
               {{ task.get_priority_display }}
             </span>
           </div>
-          {% endfor %}
-        {% else %}
-          <div class="text-center py-8">
-            <i class="fas fa-check-circle text-3xl text-green-400 mb-2"></i>
-            <p class="text-gray-500 dark:text-gray-400 text-sm">Todo al día — no hay tareas pendientes</p>
-          </div>
+        </div>
+        {% endfor %}
+
+        {% if not pending_mise and not in_progress_mise %}
+        <div class="empty-state py-10">
+          <div class="empty-state-icon">✅</div>
+          <div class="empty-state-title">¡Todo al día!</div>
+          <div class="empty-state-desc">No hay tareas pendientes para hoy</div>
+        </div>
         {% endif %}
-        <a href="{% url 'mise_en_place_create' %}" class="flex items-center gap-2 text-sm text-gray-400 hover:text-brand-500 dark:hover:text-brand-400 mt-2 transition">
-          <i class="fas fa-plus-circle"></i> Agregar tarea
+      </div>
+
+      <div class="px-6 py-3 border-t" style="border-color:var(--border)">
+        <a href="{% url 'mise_en_place_create' %}" class="ch-btn ch-btn-ghost ch-btn-sm w-full justify-center" style="color:var(--text-3)">
+          <i class="fas fa-plus text-xs"></i> Agregar tarea
         </a>
       </div>
     </div>
 
     <!-- Right column -->
-    <div class="space-y-5">
+    <div class="space-y-4">
 
-      <!-- Low Stock -->
-      <div class="card">
-        <div class="flex items-center justify-between px-4 pt-4 pb-2 border-b border-gray-100 dark:border-gray-700">
+      <!-- Stock bajo -->
+      <div class="ch-card">
+        <div class="flex items-center justify-between px-5 pt-4 pb-3 border-b" style="border-color:var(--border)">
           <div class="flex items-center gap-2">
-            <i class="fas fa-exclamation-circle text-red-500"></i>
-            <h3 class="font-semibold text-gray-900 dark:text-white text-sm">Stock Bajo</h3>
+            <i class="fas fa-exclamation-circle text-xs" style="color:#ef4444"></i>
+            <h3 class="font-semibold text-sm" style="color:var(--text)">Stock Bajo</h3>
           </div>
-          <a href="{% url 'ingredient_list' %}?status=bajo" class="text-xs text-brand-600 dark:text-brand-400 hover:underline">Ver todo</a>
+          {% if low_stock_count > 0 %}
+          <a href="{% url 'purchase_list_generate' %}" class="ch-btn ch-btn-sm" style="background:rgba(239,68,68,0.1);color:#ef4444;font-size:11px">
+            <i class="fas fa-shopping-cart text-xs"></i> Comprar
+          </a>
+          {% endif %}
         </div>
         <div class="p-4 space-y-3">
-          {% if low_stock_items %}
-            {% for item in low_stock_items %}
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-medium text-gray-700 dark:text-gray-300 truncate max-w-[120px]">{{ item.name }}</span>
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{ item.current_stock|floatformat:1 }}/{{ item.minimum_stock|floatformat:1 }}{{ item.unit }}</span>
-              </div>
-              <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
-                <div class="bg-red-500 h-1.5 rounded-full" style="width: {{ item.stock_percentage }}%"></div>
-              </div>
+          {% for item in low_stock_items %}
+          <a href="{% url 'ingredient_detail' item.pk %}" class="block group">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-medium truncate max-w-[130px] group-hover:underline" style="color:var(--text)">{{ item.name }}</span>
+              <span class="text-xs flex-shrink-0 ml-2" style="color:var(--text-3)">{{ item.current_stock|floatformat:1 }}/{{ item.minimum_stock|floatformat:1 }}{{ item.unit }}</span>
             </div>
-            {% endfor %}
-            <a href="{% url 'purchase_list_generate' %}" class="btn-primary w-full justify-center text-xs py-2 mt-1">
-              <i class="fas fa-shopping-cart"></i> Generar lista de compras
-            </a>
-          {% else %}
-            <p class="text-xs text-gray-400 dark:text-gray-500 text-center py-4">Todo el stock está bien</p>
-          {% endif %}
+            <div class="progress-bar">
+              <div class="progress-fill" style="width:{{ item.stock_percentage }}%; background:{% if item.stock_percentage < 30 %}#ef4444{% elif item.stock_percentage < 60 %}#f97316{% else %}#22c55e{% endif %}"></div>
+            </div>
+          </a>
+          {% empty %}
+          <div class="empty-state py-4">
+            <div class="empty-state-icon text-xl">✅</div>
+            <div class="empty-state-title text-xs">Todo el stock está OK</div>
+          </div>
+          {% endfor %}
         </div>
       </div>
 
-      <!-- Expiring soon -->
+      <!-- Por vencer -->
       {% if expiring_items %}
-      <div class="card">
-        <div class="flex items-center gap-2 px-4 pt-4 pb-2 border-b border-gray-100 dark:border-gray-700">
-          <i class="fas fa-clock text-yellow-500"></i>
-          <h3 class="font-semibold text-gray-900 dark:text-white text-sm">Por Vencer</h3>
+      <div class="ch-card">
+        <div class="flex items-center gap-2 px-5 pt-4 pb-3 border-b" style="border-color:var(--border)">
+          <i class="fas fa-clock text-xs" style="color:#eab308"></i>
+          <h3 class="font-semibold text-sm" style="color:var(--text)">Por Vencer</h3>
         </div>
         <div class="p-4 space-y-2">
           {% for item in expiring_items %}
           <div class="flex items-center justify-between">
-            <span class="text-xs font-medium text-gray-700 dark:text-gray-300 truncate max-w-[140px]">{{ item.name }}</span>
-            <span class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">{{ item.expiry_date|date:"d/m" }}</span>
+            <span class="text-xs font-medium" style="color:var(--text)">{{ item.name }}</span>
+            <span class="ch-badge ch-badge-yellow">{{ item.expiry_date|date:"d/m" }}</span>
           </div>
           {% endfor %}
         </div>
       </div>
       {% endif %}
 
-      <!-- Equipment issues -->
+      <!-- Equipos -->
       {% if active_equipment_issues %}
-      <div class="card">
-        <div class="flex items-center gap-2 px-4 pt-4 pb-2 border-b border-gray-100 dark:border-gray-700">
-          <i class="fas fa-wrench text-yellow-500"></i>
-          <h3 class="font-semibold text-gray-900 dark:text-white text-sm">Equipos con Problemas</h3>
-        </div>
-        <div class="p-4 space-y-2">
-          {% for issue in active_equipment_issues %}
+      <div class="ch-card">
+        <div class="flex items-center justify-between px-5 pt-4 pb-3 border-b" style="border-color:var(--border)">
           <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full flex-shrink-0 {% if issue.priority == 'critica' %}bg-red-500{% elif issue.priority == 'alta' %}bg-orange-500{% else %}bg-yellow-400{% endif %}"></span>
-            <span class="text-xs text-gray-700 dark:text-gray-300 truncate flex-1">{{ issue.display_name }}</span>
-            <span class="text-xs text-gray-400 dark:text-gray-500">{{ issue.get_status_display }}</span>
+            <i class="fas fa-wrench text-xs" style="color:#f97316"></i>
+            <h3 class="font-semibold text-sm" style="color:var(--text)">Equipos</h3>
+          </div>
+          <a href="{% url 'equipment_issue_list' %}" class="text-xs" style="color:var(--accent)">Ver todos →</a>
+        </div>
+        <div class="p-4 space-y-2.5">
+          {% for issue in active_equipment_issues %}
+          <div class="flex items-center gap-2.5">
+            <div class="w-2 h-2 rounded-full flex-shrink-0"
+                 style="background:{% if issue.priority == 'critica' %}#ef4444{% elif issue.priority == 'alta' %}#f97316{% else %}#eab308{% endif %}"></div>
+            <span class="text-xs font-medium flex-1 truncate" style="color:var(--text)">{{ issue.display_name }}</span>
+            <span class="ch-badge ch-badge-{% if issue.status == 'en_reparacion' %}blue{% else %}gray{% endif %} text-[10px]">{{ issue.get_status_display }}</span>
           </div>
           {% endfor %}
-          <a href="{% url 'equipment_issue_list' %}" class="text-xs text-brand-500 hover:underline mt-1 block">Ver todos →</a>
         </div>
       </div>
       {% endif %}
@@ -239,56 +267,59 @@
     </div>
   </div>
 
-  <!-- Production today -->
+  <!-- ── Producción del día ── -->
   {% if pending_production %}
-  <div class="card">
-    <div class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100 dark:border-gray-700">
-      <div class="flex items-center gap-2">
-        <i class="fas fa-fire text-orange-500"></i>
-        <h2 class="font-semibold text-gray-900 dark:text-white">Producción — Hoy</h2>
+  <div class="ch-card">
+    <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color:var(--border)">
+      <div class="flex items-center gap-2.5">
+        <i class="fas fa-fire text-sm" style="color:#f97316"></i>
+        <h2 class="font-semibold text-sm" style="color:var(--text)">Producción — Hoy</h2>
       </div>
-      <a href="{% url 'production_list' %}" class="text-sm text-brand-600 dark:text-brand-400 hover:underline font-medium">Ver todo →</a>
+      <a href="{% url 'production_list' %}" class="ch-btn ch-btn-ghost ch-btn-sm" style="font-size:12px">
+        Ver todo <i class="fas fa-arrow-right text-xs ml-1"></i>
+      </a>
     </div>
-    <div class="p-5">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {% for task in pending_production %}
-        <div class="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
-          <div class="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-fire text-orange-500 text-sm"></i>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ task.recipe.name }}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">{{ task.quantity }} {{ task.unit }}{% if task.assigned_to %} · {{ task.assigned_to.get_short_name|default:task.assigned_to.username }}{% endif %}</p>
-          </div>
-          <form method="post" action="{% url 'production_complete' task.pk %}">
-            {% csrf_token %}
-            <button type="submit" class="w-8 h-8 bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-800/50 rounded-lg flex items-center justify-center transition">
-              <i class="fas fa-check text-green-600 dark:text-green-400 text-sm"></i>
-            </button>
-          </form>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-5">
+      {% for task in pending_production %}
+      <div class="flex items-center gap-3 p-3.5 rounded-xl" style="background:var(--surface-2)">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(249,115,22,0.12)">
+          <i class="fas fa-fire text-sm" style="color:#f97316"></i>
         </div>
-        {% endfor %}
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium truncate" style="color:var(--text)">{{ task.recipe.name }}</p>
+          <p class="text-xs" style="color:var(--text-3)">
+            {{ task.quantity }} {{ task.unit }}
+            {% if task.assigned_to %} · {{ task.assigned_to.get_short_name|default:task.assigned_to.username }}{% endif %}
+          </p>
+        </div>
+        <form method="post" action="{% url 'production_complete' task.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="ch-btn ch-btn-success ch-btn-sm ch-btn-icon" title="Completar">
+            <i class="fas fa-check text-xs"></i>
+          </button>
+        </form>
       </div>
+      {% endfor %}
     </div>
   </div>
   {% endif %}
 
-  <!-- Bottom stats -->
+  <!-- ── Bottom Stats ── -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-    <div class="card p-4">
-      <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Valor del Inventario</p>
-      <p class="text-2xl font-bold text-gray-900 dark:text-white">${{ total_inventory_value|floatformat:0 }}</p>
+    <div class="ch-card p-5">
+      <div class="stat-label mb-2">Valor del Inventario</div>
+      <div class="stat-value">${{ total_inventory_value|floatformat:0 }}</div>
     </div>
-    <div class="card p-4">
-      <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Desperdicio Semana</p>
-      <p class="text-2xl font-bold {% if weekly_waste_cost > 0 %}text-orange-600 dark:text-orange-400{% else %}text-gray-900 dark:text-white{% endif %}">${{ weekly_waste_cost|floatformat:0 }}</p>
+    <div class="ch-card p-5">
+      <div class="stat-label mb-2">Desperdicio (7 días)</div>
+      <div class="stat-value {% if weekly_waste_cost > 0 %}text-red-500{% endif %}">${{ weekly_waste_cost|floatformat:0 }}</div>
     </div>
-    <div class="card p-4">
-      <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Listas de Compras</p>
-      <div class="flex items-center justify-between">
-        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ recent_purchase_lists|length }}</p>
-        <a href="{% url 'purchase_list_index' %}" class="text-xs text-brand-500 hover:underline">Ver →</a>
+    <div class="ch-card p-5 flex items-center justify-between">
+      <div>
+        <div class="stat-label mb-2">Listas de Compras</div>
+        <div class="stat-value">{{ recent_purchase_lists|length }}</div>
       </div>
+      <a href="{% url 'purchase_list_index' %}" class="ch-btn ch-btn-ghost ch-btn-sm" style="font-size:12px">Ver →</a>
     </div>
   </div>
 

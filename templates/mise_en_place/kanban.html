@@ -2,92 +2,113 @@
 {% block title %}Mise en Place{% endblock %}
 
 {% block content %}
-<div class="space-y-5">
+<div class="space-y-6">
   <!-- Header -->
-  <div class="flex flex-wrap items-center justify-between gap-3">
+  <div class="flex flex-wrap items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Mise en Place</h1>
-      <div class="flex items-center gap-3 mt-1">
-        <form method="get" class="flex items-center gap-2">
-          <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}" class="form-input text-sm max-w-[150px] py-1.5"
-            onchange="this.form.submit()">
-        </form>
-        {% if selected_date != today %}
-        <a href="{% url 'mise_en_place_kanban' %}" class="text-sm text-brand-500 hover:underline">Hoy</a>
-        {% endif %}
-      </div>
+      <h1 class="text-2xl font-bold" style="color:var(--text)">Mise en Place</h1>
+      <p class="text-sm mt-0.5" style="color:var(--text-muted)">
+        {% if selected_date == today %}Hoy{% else %}{{ selected_date|date:"j \d\e F" }}{% endif %}
+        &mdash; {{ pending|length|add:in_progress|length|add:done|length }} tarea{{ pending|length|add:in_progress|length|add:done|length|pluralize:"s" }}
+      </p>
     </div>
-    <a href="{% url 'mise_en_place_create' %}?date={{ selected_date|date:'Y-m-d' }}" class="btn-primary">
-      <i class="fas fa-plus"></i> Nueva Tarea
-    </a>
+    <div class="flex items-center gap-3">
+      <form method="get" class="flex items-center gap-2">
+        <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}"
+          class="ch-input text-sm py-1.5 max-w-[160px]" onchange="this.form.submit()">
+      </form>
+      {% if selected_date != today %}
+      <a href="{% url 'mise_en_place_kanban' %}" class="ch-btn-secondary text-sm py-1.5 px-3">
+        <i class="fas fa-calendar-day mr-1"></i> Hoy
+      </a>
+      {% endif %}
+      <a href="{% url 'mise_en_place_create' %}?date={{ selected_date|date:'Y-m-d' }}" class="ch-btn-primary text-sm py-1.5 px-4">
+        <i class="fas fa-plus mr-1.5"></i> Nueva Tarea
+      </a>
+    </div>
   </div>
 
-  <!-- Summary pills -->
-  <div class="flex gap-3 flex-wrap">
-    <span class="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full px-3 py-1 text-sm">
-      <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
-      {{ pending|length }} Pendientes
-    </span>
-    <span class="inline-flex items-center gap-2 bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 rounded-full px-3 py-1 text-sm">
-      <span class="w-2 h-2 bg-brand-500 rounded-full"></span>
-      {{ in_progress|length }} En Proceso
-    </span>
-    <span class="inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full px-3 py-1 text-sm">
-      <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-      {{ done|length }} Terminados
-    </span>
+  <!-- Progress bar -->
+  {% with total=pending|length|add:in_progress|length|add:done|length %}
+  {% if total > 0 %}
+  <div class="ch-card p-4">
+    <div class="flex items-center justify-between text-xs mb-2" style="color:var(--text-muted)">
+      <span>Progreso del día</span>
+      <span class="font-semibold" style="color:var(--text)">{{ done|length }}/{{ total }} completadas</span>
+    </div>
+    <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--border)">
+      {% widthratio done|length total 100 as pct %}
+      <div class="h-full rounded-full transition-all duration-500"
+           style="width:{{ pct }}%; background:var(--success)"></div>
+    </div>
   </div>
+  {% endif %}
+  {% endwith %}
 
   <!-- Kanban Board -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
 
     <!-- Pendiente -->
     <div class="space-y-3">
-      <div class="flex items-center gap-2 px-1">
-        <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
-        <h2 class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Pendiente</h2>
-        <span class="badge bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{{ pending|length }}</span>
+      <div class="flex items-center gap-2.5 px-1">
+        <div class="w-2.5 h-2.5 rounded-full" style="background:var(--text-muted)"></div>
+        <h2 class="font-semibold text-xs uppercase tracking-widest" style="color:var(--text-muted)">Pendiente</h2>
+        <span class="ch-badge-gray text-xs ml-auto">{{ pending|length }}</span>
       </div>
-      <div class="space-y-2">
+      <div id="col-pendiente" class="space-y-2.5 min-h-[80px]">
         {% for task in pending %}
         {% include "mise_en_place/_task_card.html" with task=task next_status="en_proceso" next_label="Iniciar" next_icon="fa-play" %}
+        {% empty %}
+        <div class="text-center py-8 text-sm" style="color:var(--text-muted)">
+          <i class="fas fa-inbox text-2xl mb-2 block opacity-30"></i>
+          Sin tareas pendientes
+        </div>
         {% endfor %}
-        <a href="{% url 'mise_en_place_create' %}?date={{ selected_date|date:'Y-m-d' }}" class="flex items-center gap-2 p-3 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 text-gray-400 hover:border-brand-300 hover:text-brand-500 transition text-sm">
-          <i class="fas fa-plus"></i> Agregar tarea
-        </a>
       </div>
+      <a href="{% url 'mise_en_place_create' %}?date={{ selected_date|date:'Y-m-d' }}"
+         class="flex items-center gap-2 p-3 rounded-xl border-2 border-dashed text-sm transition-colors"
+         style="border-color:var(--border);color:var(--text-muted)"
+         onmouseenter="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+         onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+        <i class="fas fa-plus text-xs"></i> Agregar tarea
+      </a>
     </div>
 
     <!-- En proceso -->
     <div class="space-y-3">
-      <div class="flex items-center gap-2 px-1">
-        <div class="w-3 h-3 bg-brand-500 rounded-full animate-pulse"></div>
-        <h2 class="font-semibold text-brand-600 dark:text-brand-400 text-sm uppercase tracking-wide">En Proceso</h2>
-        <span class="badge bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300">{{ in_progress|length }}</span>
+      <div class="flex items-center gap-2.5 px-1">
+        <div class="w-2.5 h-2.5 rounded-full animate-pulse" style="background:var(--accent)"></div>
+        <h2 class="font-semibold text-xs uppercase tracking-widest" style="color:var(--accent)">En Proceso</h2>
+        <span class="ch-badge-blue text-xs ml-auto">{{ in_progress|length }}</span>
       </div>
-      <div class="space-y-2">
+      <div id="col-en-proceso" class="space-y-2.5 min-h-[80px]">
         {% for task in in_progress %}
         {% include "mise_en_place/_task_card.html" with task=task next_status="terminado" next_label="Terminar" next_icon="fa-check" %}
+        {% empty %}
+        <div class="text-center py-8 text-sm" style="color:var(--text-muted)">
+          <i class="fas fa-spinner text-2xl mb-2 block opacity-30"></i>
+          Nada en proceso
+        </div>
         {% endfor %}
       </div>
     </div>
 
     <!-- Terminado -->
     <div class="space-y-3">
-      <div class="flex items-center gap-2 px-1">
-        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-        <h2 class="font-semibold text-green-600 dark:text-green-400 text-sm uppercase tracking-wide">Terminado</h2>
-        <span class="badge bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">{{ done|length }}</span>
+      <div class="flex items-center gap-2.5 px-1">
+        <div class="w-2.5 h-2.5 rounded-full" style="background:var(--success)"></div>
+        <h2 class="font-semibold text-xs uppercase tracking-widest" style="color:var(--success)">Terminado</h2>
+        <span class="ch-badge-green text-xs ml-auto">{{ done|length }}</span>
       </div>
-      <div class="space-y-2 opacity-70">
+      <div id="col-terminado" class="space-y-2.5 min-h-[80px] opacity-75">
         {% for task in done %}
         {% include "mise_en_place/_task_card.html" with task=task %}
-        {% endfor %}
-        {% if not done %}
-        <div class="p-4 text-center text-sm text-gray-400 dark:text-gray-500">
-          <i class="fas fa-check-circle text-xl mb-1 block"></i> Sin tareas terminadas
+        {% empty %}
+        <div class="text-center py-8 text-sm" style="color:var(--text-muted)">
+          <i class="fas fa-check-circle text-2xl mb-2 block opacity-30"></i>
+          Sin completadas aún
         </div>
-        {% endif %}
+        {% endfor %}
       </div>
     </div>
 
