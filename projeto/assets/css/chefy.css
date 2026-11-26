@@ -1,0 +1,91 @@
+/*
+ * chefy.css — identidade visual do Chefy por cima do Bootstrap.
+ * Regras do manual de marca:
+ *   - Azul pizarra = base (botões, títulos, navegação). Amarelo = SÓ acentos/indicadores,
+ *     nunca texto pequeno sobre branco.
+ *   - Lilita One só em títulos; Nunito no resto.
+ *   - Raios: cartão 12px, botão 9px. Espaçamentos: 8, 16, 24, 32.
+ */
+:root {
+    --color-primary: #202F4D;
+    --color-accent: #F5AD32;
+    --color-background: #FFFFFF;
+    --color-surface: #F3F5F7;
+    --color-text: #252B35;
+    --color-muted: #596273;
+    --color-border: #D9DDE4;
+    --font-heading: 'Lilita One', sans-serif;
+    --font-body: 'Nunito', sans-serif;
+    --radius-card: 12px;
+    --radius-button: 9px;
+
+    /* Liga os tokens ao Bootstrap */
+    --bs-body-font-family: var(--font-body);
+    --bs-body-color: var(--color-text);
+    --bs-body-bg: var(--color-background);
+    --bs-primary: var(--color-primary);
+    --bs-primary-rgb: 32, 47, 77;
+    --bs-link-color: var(--color-primary);
+    --bs-link-color-rgb: 32, 47, 77;
+    --bs-link-hover-color: #151f35;
+    --bs-link-hover-color-rgb: 21, 31, 53;
+    --bs-border-color: var(--color-border);
+    --bs-border-radius: var(--radius-button);
+    --bs-border-radius-lg: var(--radius-card);
+}
+
+body { background: var(--color-surface); }
+
+h1, h2, h3, h4, .chefy-wordmark {
+    font-family: var(--font-heading);
+    font-weight: 400;       /* Lilita One só tem peso 400 */
+    color: var(--color-primary);
+}
+h1 { font-size: 2.25rem; }
+
+/* Navegação */
+.chefy-navbar { background: var(--color-background); border-bottom: 1px solid var(--color-border); }
+.chefy-wordmark { font-size: 1.6rem; line-height: 1; }
+.chefy-navbar .nav-link { font-weight: 700; color: var(--color-muted); border-radius: var(--radius-button); }
+.chefy-navbar .nav-link.active { color: var(--color-primary); background: rgba(245, 173, 50, .25); } /* amarelo como fundo */
+
+/* Botões */
+.btn { font-weight: 800; border-radius: var(--radius-button); min-height: 44px; padding-inline: 1rem; display: inline-flex; align-items: center; justify-content: center; }
+.btn-sm { min-height: 36px; }
+.btn-primary { --bs-btn-bg: var(--color-primary); --bs-btn-border-color: var(--color-primary);
+    --bs-btn-hover-bg: #151f35; --bs-btn-hover-border-color: #151f35;
+    --bs-btn-active-bg: #101829; --bs-btn-active-border-color: #101829; }
+.btn-outline-primary { --bs-btn-color: var(--color-primary); --bs-btn-border-color: var(--color-primary);
+    --bs-btn-hover-bg: var(--color-primary); --bs-btn-hover-border-color: var(--color-primary);
+    --bs-btn-active-bg: var(--color-primary); --bs-btn-active-border-color: var(--color-primary); }
+
+/* Cartões */
+.card { border: 1px solid var(--color-border); border-radius: var(--radius-card); box-shadow: none; }
+.card-header { background: var(--color-background); font-weight: 800; border-bottom: 1px solid var(--color-border); border-radius: var(--radius-card) var(--radius-card) 0 0 !important; }
+
+/* Formulários */
+.form-label { font-weight: 700; }
+.form-control, .form-select { min-height: 44px; border-color: #8A93A3; } /* contraste ≥ 3:1 */
+.form-control:focus, .form-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 .25rem rgba(32, 47, 77, .25); }
+
+/* Tabelas */
+.table > :not(caption) > * > * { padding: .75rem; vertical-align: middle; }
+.table thead th { color: var(--color-muted); font-size: .85rem; font-weight: 700; text-transform: none; border-bottom-color: var(--color-border); }
+
+/* Números grandes do painel */
+.estatistica { font-family: var(--font-heading); font-size: 2.25rem; line-height: 1.1; color: var(--color-primary); }
+.estatistica.alerta { color: #B3261E; }
+.estatistica-etiqueta { color: var(--color-muted); font-weight: 700; font-size: .9rem; }
+
+/* Selo de stock baixo: fundo amarelo, texto escuro (nunca texto amarelo) */
+.selo-baixo { background: rgba(245, 173, 50, .3); color: var(--color-text); font-weight: 700; border-radius: 6px; padding: .15rem .5rem; font-size: .8rem; }
+
+/* Estado vazio */
+.estado-vazio { text-align: center; padding: 2rem 1rem; color: var(--color-muted); }
+.estado-vazio img { opacity: .9; margin-bottom: .5rem; }
+
+/* Login / registo */
+.cartao-auth { max-width: 440px; margin: 2rem auto; }
+.titular { font-family: var(--font-heading); color: var(--color-primary); font-size: 2.5rem; line-height: 1.1; text-align: center; }
+
+.chefy-footer { color: var(--color-muted); }
